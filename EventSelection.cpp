@@ -20,6 +20,9 @@
 //#include "PlotHandler.hpp"
 //#include "SelectionTools.hpp"
 
+const double _beamSpillStarts = 3.2; // us
+const double _beamSpillEnds   = 4.8; // us
+
 using namespace std;
 
 
@@ -47,19 +50,20 @@ int main(int argc, char* argv[]) {
     exit(0);
   }
   
-  string beam       = argv[1];
+  string filen      = argv[1];
   string dopot      = argv[2];
   int    maxEntries = atoi(argv[3]);
-  cout << endl << "Working with the " << beam << " beam." << endl;
+  cout << endl << "File name " << filen << " beam." << endl;
   
   TApplication* rootapp = new TApplication("ROOT Application",&argc, argv);
   //gROOT->SetBatch(kTRUE);
   gROOT->ProcessLine( "gErrorIgnoreLevel = 2001;"); // 1001: INFO, 2001: WARNINGS, 3001: ERRORS
+  gROOT->ProcessLine(".x rootlogon.C");
   
-  string pattern;
-  if(beam == "numi") pattern = "/data/t2k/lar/uboone/prodgenie_numi_nu_uboone_MCC7/prodgenie_numi_nu_cosmic_uboone_merged_gen_g4_detsim_reco1_reco2_ana.root";
+  string pattern = filen;
+  //if(beam == "numi") pattern = "/data/t2k/lar/uboone/prodgenie_numi_nu_uboone_MCC7/prodgenie_numi_nu_cosmic_uboone_merged_gen_g4_detsim_reco1_reco2_ana.root";
   //if(beam == "bnb")  pattern = "/pnfs/uboone/persistent/users/aschu/MC_BNB_Cosmic/prodgenie_bnb_nu_cosmic_uboone_v05_08_00_at.root";
-  if(beam == "bnb")  pattern = "files/output9850.root";
+  //if(beam == "bnb")  pattern = "files/output9850.root";
   
   
   bool evalPOT = false;
@@ -154,10 +158,14 @@ int main(int argc, char* argv[]) {
   TH2D* h_frac_diff_others = new TH2D("h_frac_diff", ";PMT ID; Fractional difference", 32, 0, 32, 80, -2, 2);
   double hypo_spec_x[32], hypo_spec_y[32];
   double meas_spec_x[32], meas_spec_y[32];
+  double numc_spec_x[32], numc_spec_y[32];
   
   TH1D* h_vtxcheck_angle_good = new TH1D("h_vtxcheck_angle_good", ";Angle [rad];Entries per bin", 100, 0, 4);
   TH1D* h_vtxcheck_angle_bad  = new TH1D("h_vtxcheck_angle_bad",  ";Angle [rad];Entries per bin",  100, 0, 4);
   
+  TH1D* h_muon_track_eff  = new TH1D("h_muon_track_eff",  ";Muon track efficiency;Entries per bin",  100, 0, 1);
+  TH1D* h_muon_track_pur  = new TH1D("h_muon_track_pur",  ";Muon track purity;Entries per bin",  100, 0, 1);
+
   
   
   
@@ -229,8 +237,10 @@ int main(int argc, char* argv[]) {
       
       if (at->muon_is_reco){
         nSignalWMuonReco++;
-        if (at->vtx_resolution > -1 && at->vtx_resolution < 10)
-          nSignalMuonRecoVtxOk++;
+        if (at->vtx_resolution > -1 && at->vtx_resolution < 10) nSignalMuonRecoVtxOk++;
+        
+        h_muon_track_eff->Fill(at->muon_reco_eff);
+        h_muon_track_pur->Fill(at->muon_reco_pur);
       }
       else{
         //std::cout << "This is a signal event but the muon was not reconstructed. Event: " << event << std::endl;
@@ -255,7 +265,7 @@ int main(int argc, char* argv[]) {
     bool goodflash = false;
     for (int fls = 0; fls < at->nbeamfls; fls ++){
       h_flsTime->Fill(at->beamfls_time->at(fls));
-      if (at->beamfls_time->at(fls) > 3 && at->beamfls_time->at(fls) < 5) {
+      if (at->beamfls_time->at(fls) > _beamSpillStarts && at->beamfls_time->at(fls) < _beamSpillEnds) {
         
         flashInBeamSpill = fls;
         if (at->beamfls_pe->at(fls) >= 50) {
@@ -291,13 +301,15 @@ int main(int argc, char* argv[]) {
         }
       }
       //  spec
-      if (i == 0) {
+      if (at->event == 53227) {
         if (flashInBeamSpill > -1 && at->slc_flsmatch_score->at(slc) > -1){
           for (int pmt = 0; pmt < 32; pmt++) {
             hypo_spec_x[pmt] = pmt;
-            hypo_spec_y[pmt] = (at->slc_flshypo_spec->at(3))[pmt];
+            hypo_spec_y[pmt] = (at->slc_flshypo_spec->at(1))[pmt];
             meas_spec_x[pmt] = pmt;
             meas_spec_y[pmt] = (at->beamfls_spec->at(flashInBeamSpill))[pmt];
+            numc_spec_x[pmt] = pmt;
+            numc_spec_y[pmt] = at->numc_flash_spec->at(pmt);
           }
         }
       }
@@ -306,13 +318,13 @@ int main(int argc, char* argv[]) {
       if (at->slc_origin->at(slc) == 0 && at->fv == 1 && at->slc_vtxcheck_angle->at(slc) > -9999) {
         if (at->vtx_resolution <= 10.){
           h_vtxcheck_angle_good->Fill(at->slc_vtxcheck_angle->at(slc));
-          if (at->slc_vtxcheck_angle->at(slc) > 3)
-            std::cout << "Angle is about 180 for a good vertex for event: " << at->event << std::endl;
+          //if (at->slc_vtxcheck_angle->at(slc) > 3)
+            //std::cout << "Angle is about 180 for a good vertex for event: " << at->event << std::endl;
         }
         if (at->vtx_resolution > 10.){
           h_vtxcheck_angle_bad->Fill(at->slc_vtxcheck_angle->at(slc));
-          if (at->slc_vtxcheck_angle->at(slc) < 2)
-            std::cout << "Angle is not 180 for a bad vertex for event: " << at->event << std::endl;
+          //if (at->slc_vtxcheck_angle->at(slc) < 2)
+            //std::cout << "Angle is not 180 for a bad vertex for event: " << at->event << std::endl;
         }
       }
       
@@ -403,6 +415,7 @@ int main(int argc, char* argv[]) {
       if (at->slc_crosses_top_boundary->at(scl_ll_max) == 1 )
         bkg_cosmic_top_sel++;
       pEff->Fill(false, at->nu_e);
+      if (at->muon_is_reco == 1) std::cout << "Is a cosmic but is selected. event: " << at->event << std::endl;
     }
     
     
@@ -494,6 +507,7 @@ int main(int argc, char* argv[]) {
   TCanvas *c9 = new TCanvas();
   TGraph* gr = new TGraph(32,hypo_spec_x,hypo_spec_y);
   TGraph* gr2 = new TGraph(32,meas_spec_x,meas_spec_y);
+  TGraph* gr3 = new TGraph(32,numc_spec_x,numc_spec_y);
   gr->SetLineColor(kGreen+2);
   gr->SetLineWidth(2);
   gr->SetMarkerColor(kGreen+2);
@@ -512,15 +526,32 @@ int main(int argc, char* argv[]) {
   gr2->GetXaxis()->SetTitle("PMT ID");
   gr2->GetYaxis()->SetTitle("PE Count");
   gr2->Draw("LP");
+  gr3->SetLineColor(kRed+2);
+  gr3->SetLineWidth(2);
+  gr3->SetMarkerColor(kRed+2);
+  gr3->SetMarkerSize(1.2);
+  gr3->SetMarkerStyle(20);
+  gr3->SetTitle("");
+  gr3->GetXaxis()->SetTitle("PMT ID");
+  gr3->GetYaxis()->SetTitle("PE Count");
+  //gr3->Draw("LP");
   TLegend* leg = new TLegend(0.1,0.7,0.48,0.9);
   leg->AddEntry(gr,"Hypo flash","l");
   leg->AddEntry(gr2,"Reco flash","l");
+  //leg->AddEntry(gr3,"Neutrino MCFlash","l");
+
   leg->Draw();
   
   TCanvas *c10 = new TCanvas();
   h_vtxcheck_angle_good->Draw("histo");
   h_vtxcheck_angle_bad->Draw("histo same");
   h_vtxcheck_angle_bad->SetLineColor(kRed);
+  
+  TCanvas *c11 = new TCanvas();
+  h_muon_track_eff->Draw();
+  
+  TCanvas *c12 = new TCanvas();
+  h_muon_track_pur->Draw();
 
   
   
