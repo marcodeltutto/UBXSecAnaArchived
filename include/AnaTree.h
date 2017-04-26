@@ -1,8 +1,8 @@
 //////////////////////////////////////////////////////////
 // This class has been automatically generated on
-// Tue Apr 18 18:12:54 2017 by ROOT version 6.09/01
+// Wed Apr 26 09:08:08 2017 by ROOT version 6.09/01
 // from TTree tree/
-// found on file: ../files/output9850.root
+// found on file: ../files/output_apr26.root
 //////////////////////////////////////////////////////////
 
 #ifndef AnaTree_h
@@ -13,6 +13,7 @@
 #include <TFile.h>
 
 // Header file for the classes stored in the TTree if any.
+#include "vector"
 #include "vector"
 #include "vector"
 #include "vector"
@@ -31,6 +32,9 @@ public :
    Int_t           subrun;
    Int_t           event;
    Int_t           muon_is_reco;
+   Double_t        muon_reco_pur;
+   Double_t        muon_reco_eff;
+   Double_t        true_muon_mom;
    Int_t           nPFPtagged;
    Int_t           muon_is_flash_tagged;
    Double_t        muon_tag_score;
@@ -77,9 +81,12 @@ public :
    vector<int>     *slc_nuvtx_closetodeadregion_w;
    vector<double>  *slc_kalman_chi2;
    vector<int>     *slc_kalman_ndof;
+   vector<bool>    *slc_passed_min_track_quality;
+   vector<double>  *slc_n_intime_pe_closestpmt;
    Int_t           nbeamfls;
    vector<double>  *beamfls_time;
    vector<double>  *beamfls_pe;
+   Bool_t          no_mcflash_but_op_activity;
    vector<vector<double> > *beamfls_spec;
    vector<double>  *numc_flash_spec;
    vector<vector<double> > *slc_flshypo_xfixed_spec;
@@ -103,6 +110,9 @@ public :
    TBranch        *b_subrun;   //!
    TBranch        *b_event;   //!
    TBranch        *b_muon_is_reco;   //!
+   TBranch        *b_muon_reco_pur;   //!
+   TBranch        *b_muon_reco_eff;   //!
+   TBranch        *b_true_muon_mom;   //!
    TBranch        *b_nPFPtagged;   //!
    TBranch        *b_muon_is_flash_tagged;   //!
    TBranch        *b_muon_tag_score;   //!
@@ -149,9 +159,12 @@ public :
    TBranch        *b_slc_nuvtx_closetodeadregion_w;   //!
    TBranch        *b_slc_kalman_chi2;   //!
    TBranch        *b_slc_kalman_ndof;   //!
+   TBranch        *b_slc_passed_min_track_quality;   //!
+   TBranch        *b_slc_n_intime_pe_closestpmt;   //!
    TBranch        *b_nbeamfls;   //!
    TBranch        *b_beamfls_time;   //!
    TBranch        *b_beamfls_pe;   //!
+   TBranch        *b_no_mcflash_but_op_activity;   //!
    TBranch        *b_beamfls_spec;   //!
    TBranch        *b_numc_flash_spec;   //!
    TBranch        *b_slc_flshypo_xfixed_spec;   //!
@@ -189,11 +202,11 @@ AnaTree::AnaTree(TTree *tree) : fChain(0)
 // if parameter tree is not specified (or zero), connect the file
 // used to generate this class and read the Tree.
    if (tree == 0) {
-      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("../files/output9850.root");
+      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("../files/output_apr26.root");
       if (!f || !f->IsOpen()) {
-         f = new TFile("../files/output9850.root");
+         f = new TFile("../files/output_apr26.root");
       }
-      TDirectory * dir = (TDirectory*)f->Get("../files/output9850.root:/UBXSec");
+      TDirectory * dir = (TDirectory*)f->Get("../files/output_apr26.root:/UBXSec");
       dir->GetObject("tree",tree);
 
    }
@@ -258,6 +271,8 @@ void AnaTree::Init(TTree *tree)
    slc_nuvtx_closetodeadregion_w = 0;
    slc_kalman_chi2 = 0;
    slc_kalman_ndof = 0;
+   slc_passed_min_track_quality = 0;
+   slc_n_intime_pe_closestpmt = 0;
    beamfls_time = 0;
    beamfls_pe = 0;
    beamfls_spec = 0;
@@ -286,6 +301,9 @@ void AnaTree::Init(TTree *tree)
    fChain->SetBranchAddress("subrun", &subrun, &b_subrun);
    fChain->SetBranchAddress("event", &event, &b_event);
    fChain->SetBranchAddress("muon_is_reco", &muon_is_reco, &b_muon_is_reco);
+   fChain->SetBranchAddress("muon_reco_pur", &muon_reco_pur, &b_muon_reco_pur);
+   fChain->SetBranchAddress("muon_reco_eff", &muon_reco_eff, &b_muon_reco_eff);
+   fChain->SetBranchAddress("true_muon_mom", &true_muon_mom, &b_true_muon_mom);
    fChain->SetBranchAddress("nPFPtagged", &nPFPtagged, &b_nPFPtagged);
    fChain->SetBranchAddress("muon_is_flash_tagged", &muon_is_flash_tagged, &b_muon_is_flash_tagged);
    fChain->SetBranchAddress("muon_tag_score", &muon_tag_score, &b_muon_tag_score);
@@ -332,9 +350,12 @@ void AnaTree::Init(TTree *tree)
    fChain->SetBranchAddress("slc_nuvtx_closetodeadregion_w", &slc_nuvtx_closetodeadregion_w, &b_slc_nuvtx_closetodeadregion_w);
    fChain->SetBranchAddress("slc_kalman_chi2", &slc_kalman_chi2, &b_slc_kalman_chi2);
    fChain->SetBranchAddress("slc_kalman_ndof", &slc_kalman_ndof, &b_slc_kalman_ndof);
+   fChain->SetBranchAddress("slc_passed_min_track_quality", &slc_passed_min_track_quality, &b_slc_passed_min_track_quality);
+   fChain->SetBranchAddress("slc_n_intime_pe_closestpmt", &slc_n_intime_pe_closestpmt, &b_slc_n_intime_pe_closestpmt);
    fChain->SetBranchAddress("nbeamfls", &nbeamfls, &b_nbeamfls);
    fChain->SetBranchAddress("beamfls_time", &beamfls_time, &b_beamfls_time);
    fChain->SetBranchAddress("beamfls_pe", &beamfls_pe, &b_beamfls_pe);
+   fChain->SetBranchAddress("no_mcflash_but_op_activity", &no_mcflash_but_op_activity, &b_no_mcflash_but_op_activity);
    fChain->SetBranchAddress("beamfls_spec", &beamfls_spec, &b_beamfls_spec);
    fChain->SetBranchAddress("numc_flash_spec", &numc_flash_spec, &b_numc_flash_spec);
    fChain->SetBranchAddress("slc_flshypo_xfixed_spec", &slc_flshypo_xfixed_spec, &b_slc_flshypo_xfixed_spec);

@@ -165,6 +165,13 @@ int main(int argc, char* argv[]) {
   
   TH1D* h_muon_track_eff  = new TH1D("h_muon_track_eff",  ";Muon track efficiency;Entries per bin",  100, 0, 1);
   TH1D* h_muon_track_pur  = new TH1D("h_muon_track_pur",  ";Muon track purity;Entries per bin",  100, 0, 1);
+  
+  TH1D* h_mueff_num = new TH1D("h_mueff_num", "h_mueff_num", 40, 0, 2);
+  TH1D* h_mueff_den = new TH1D("h_mueff_den", "h_mueff_den", 40, 0, 2);
+  
+  TH2D* h_mu_eff_mom = new TH2D("h_mu_eff_mom", ";True Muon Momentum [GeV]; Efficiency", 50, 0, 2, 20, 0, 1);
+  TH2D* h_mu_pur_mom = new TH2D("h_mu_pur_mom", ";True Muon Momentum [GeV]; Purity", 50, 0, 2, 20, 0, 1);
+
 
   
   
@@ -234,13 +241,20 @@ int main(int argc, char* argv[]) {
       nsignal++;
       isSignal = true;
       h_eff_den->Fill(at->nu_e);
+      h_mueff_den->Fill(at->nu_e);
       
       if (at->muon_is_reco){
         nSignalWMuonReco++;
+        h_mueff_num->Fill(at->nu_e);
         if (at->vtx_resolution > -1 && at->vtx_resolution < 10) nSignalMuonRecoVtxOk++;
         
         h_muon_track_eff->Fill(at->muon_reco_eff);
         h_muon_track_pur->Fill(at->muon_reco_pur);
+        
+        h_mu_eff_mom->Fill(at->true_muon_mom, at->muon_reco_eff);
+        h_mu_pur_mom->Fill(at->true_muon_mom, at->muon_reco_pur);
+        
+        if(at->true_muon_mom < 0.1) std::cout << "Muon is reco at low energy for event " << at->event << std::endl;
       }
       else{
         //std::cout << "This is a signal event but the muon was not reconstructed. Event: " << event << std::endl;
@@ -301,7 +315,7 @@ int main(int argc, char* argv[]) {
         }
       }
       //  spec
-      if (at->event == 53227) {
+      if (at->event == 150817) {
         if (flashInBeamSpill > -1 && at->slc_flsmatch_score->at(slc) > -1){
           for (int pmt = 0; pmt < 32; pmt++) {
             hypo_spec_x[pmt] = pmt;
@@ -388,10 +402,15 @@ int main(int argc, char* argv[]) {
     
     if(at->slc_nuvtx_fv->at(scl_ll_max) == 0) continue;
     
+    if(at->slc_vtxcheck_angle->at(scl_ll_max) > 2.8) continue;
+    
+    if(!at->slc_passed_min_track_quality->at(scl_ll_max) > 2.8) continue;
+    
     if(at->slc_origin->at(scl_ll_max) == 0 && at->ccnc==0 && at->nupdg==14 && at->fv==1){
       signal_sel ++;
       h_eff_num->Fill(at->nu_e);
       pEff->Fill(true, at->nu_e);
+      //std::cout << "Is signal and is selected. event: " << at->event << std::endl;
     }
     else if(at->slc_origin->at(scl_ll_max) == 0 && at->ccnc==0 && at->nupdg==-14 && at->fv==1){
       bkg_anumu_sel ++;
@@ -415,7 +434,7 @@ int main(int argc, char* argv[]) {
       if (at->slc_crosses_top_boundary->at(scl_ll_max) == 1 )
         bkg_cosmic_top_sel++;
       pEff->Fill(false, at->nu_e);
-      if (at->muon_is_reco == 1) std::cout << "Is a cosmic but is selected. event: " << at->event << std::endl;
+      //if (at->muon_is_reco == 1) std::cout << "Is a cosmic but is selected. event: " << at->event << std::endl;
     }
     
     
@@ -485,6 +504,11 @@ int main(int argc, char* argv[]) {
   pEff2->SetTitle(";True Neutrino Energy [GeV];Efficiency");
   pEff2->Draw("AP");
   
+  TCanvas *c32 = new TCanvas();
+  TEfficiency* pEff3 = new TEfficiency(*h_mueff_num,*h_mueff_den);
+  pEff3->SetTitle(";True Muon Momentum [GeV];Reconstruction Efficiency");
+  pEff3->Draw("AP");
+  
   TCanvas *c2 = new TCanvas();
   h_chi2->Draw("histo");
   
@@ -548,10 +572,12 @@ int main(int argc, char* argv[]) {
   h_vtxcheck_angle_bad->SetLineColor(kRed);
   
   TCanvas *c11 = new TCanvas();
-  h_muon_track_eff->Draw();
+  //h_muon_track_eff->Draw();
+  h_mu_eff_mom->Draw("colz");
   
   TCanvas *c12 = new TCanvas();
-  h_muon_track_pur->Draw();
+  //h_muon_track_pur->Draw();
+  h_mu_pur_mom->Draw("colz");
 
   
   
