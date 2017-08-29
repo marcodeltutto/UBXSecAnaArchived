@@ -1,8 +1,8 @@
 //////////////////////////////////////////////////////////
 // This class has been automatically generated on
-// Sat Aug 26 15:56:11 2017 by ROOT version 6.06/06
+// Sun Aug 27 21:35:39 2017 by ROOT version 6.06/06
 // from TTree tree/
-// found on file: ../files/ubxsec_output_mc_7.root
+// found on file: ../files/ubxsec_output_mc_9.root
 //////////////////////////////////////////////////////////
 
 #ifndef AnaTree_h
@@ -76,6 +76,7 @@ public :
    vector<int>     *slc_nuvtx_fv;
    vector<double>  *slc_vtxcheck_angle;
    vector<int>     *slc_origin;
+   vector<int>     *slc_origin_extra;
    vector<int>     *slc_nhits_u;
    vector<int>     *slc_nhits_v;
    vector<int>     *slc_nhits_w;
@@ -174,6 +175,7 @@ public :
    TBranch        *b_slc_nuvtx_fv;   //!
    TBranch        *b_slc_vtxcheck_angle;   //!
    TBranch        *b_slc_origin;   //!
+   TBranch        *b_slc_origin_extra;   //!
    TBranch        *b_slc_nhits_u;   //!
    TBranch        *b_slc_nhits_v;   //!
    TBranch        *b_slc_nhits_w;   //!
@@ -242,11 +244,11 @@ AnaTree::AnaTree(TTree *tree) : fChain(0)
 // if parameter tree is not specified (or zero), connect the file
 // used to generate this class and read the Tree.
    if (tree == 0) {
-      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("../files/ubxsec_output_mc_7.root");
+      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("../files/ubxsec_output_mc_9.root");
       if (!f || !f->IsOpen()) {
-         f = new TFile("../files/ubxsec_output_mc_7.root");
+         f = new TFile("../files/ubxsec_output_mc_9.root");
       }
-      TDirectory * dir = (TDirectory*)f->Get("../files/ubxsec_output_mc_7.root:/UBXSec");
+      TDirectory * dir = (TDirectory*)f->Get("../files/ubxsec_output_mc_9.root:/UBXSec");
       dir->GetObject("tree",tree);
 
    }
@@ -304,6 +306,7 @@ void AnaTree::Init(TTree *tree)
    slc_nuvtx_fv = 0;
    slc_vtxcheck_angle = 0;
    slc_origin = 0;
+   slc_origin_extra = 0;
    slc_nhits_u = 0;
    slc_nhits_v = 0;
    slc_nhits_w = 0;
@@ -402,6 +405,7 @@ void AnaTree::Init(TTree *tree)
    fChain->SetBranchAddress("slc_nuvtx_fv", &slc_nuvtx_fv, &b_slc_nuvtx_fv);
    fChain->SetBranchAddress("slc_vtxcheck_angle", &slc_vtxcheck_angle, &b_slc_vtxcheck_angle);
    fChain->SetBranchAddress("slc_origin", &slc_origin, &b_slc_origin);
+   fChain->SetBranchAddress("slc_origin_extra", &slc_origin_extra, &b_slc_origin_extra);
    fChain->SetBranchAddress("slc_nhits_u", &slc_nhits_u, &b_slc_nhits_u);
    fChain->SetBranchAddress("slc_nhits_v", &slc_nhits_v, &b_slc_nhits_v);
    fChain->SetBranchAddress("slc_nhits_w", &slc_nhits_w, &b_slc_nhits_w);
