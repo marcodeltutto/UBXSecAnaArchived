@@ -263,7 +263,7 @@ int main(int argc, char* argv[]) {
   TH1D* h_trklen_nc_proton = new TH1D("h_trklen_nc_proton", "; Track length;", 30, 0, 700);
   TH1D* h_trklen_nc_pion = new TH1D("h_trklen_nc_pion", "; Track length;", 30, 0, 700);
   TH1D* h_trklen_nc_other = new TH1D("h_trklen_nc_other", "; Track length;", 30, 0, 700);
-
+  
   TH1D* h_trkphi_total = new TH1D("h_trkphi_total", "; Track #phi;", 20, -3.15, 3.15);
   TH1D* h_trkphi_signal = new TH1D("h_trkphi_signal", "; Track #phi;", 20, -3.15, 3.15);
   TH1D* h_trkphi_cosmic = new TH1D("h_trkphi_cosmic", "; Track #phi;", 20, -3.15, 3.15);
@@ -278,7 +278,7 @@ int main(int argc, char* argv[]) {
   TH1D* h_trkphi_nc_proton = new TH1D("h_trkphi_nc_proton", "; Track #phi;", 20, -3.15, 3.15);
   TH1D* h_trkphi_nc_pion = new TH1D("h_trkphi_nc_pion", "; Track #phi;", 20, -3.15, 3.15);
   TH1D* h_trkphi_nc_other = new TH1D("h_trkphi_nc_other", "; Track #phi;", 20, -3.15, 3.15);
-
+  
   TH1D* h_trktheta_total = new TH1D("h_trktheta_total", "; Track cos(#theta);", 30, -1, 1);
   TH1D* h_trktheta_signal = new TH1D("h_trktheta_signal", "; Track cos(#theta);", 30, -1, 1);
   TH1D* h_trktheta_cosmic = new TH1D("h_trktheta_cosmic", "; Track cos(#theta);", 30, -1, 1);
@@ -291,7 +291,7 @@ int main(int argc, char* argv[]) {
   TH1D* h_trktheta_nc_proton = new TH1D("h_trktheta_nc_proton", "; Track cos(#theta);", 30, -1, 1);
   TH1D* h_trktheta_nc_pion = new TH1D("h_trktheta_nc_pion", "; Track cos(#theta);", 30, -1, 1);
   TH1D* h_trktheta_nc_other = new TH1D("h_trktheta_nc_other", "; Track cos(#theta);", 30, -1, 1);
-
+  
   TH1D* h_multpfp_total = new TH1D("h_multpfp_total", "; PFP Multiplicity", 10, 0, 10);
   TH1D* h_multpfp_signal = new TH1D("h_multpfp_signal", "; PFP Multiplicity;", 10, 0, 10);
   TH1D* h_multpfp_cosmic = new TH1D("h_multpfp_cosmic", "; PFP Multiplicity;", 10, 0, 10);
@@ -304,7 +304,7 @@ int main(int argc, char* argv[]) {
   TH1D* h_multpfp_nc_proton = new TH1D("h_multpfp_nc_proton", "; PFP Multiplicity;", 10, 0, 10);
   TH1D* h_multpfp_nc_pion = new TH1D("h_multpfp_nc_pion", "; PFP Multiplicity;", 10, 0, 10);
   TH1D* h_multpfp_nc_other = new TH1D("h_multpfp_nc_other", "; PFP Multiplicity;", 10, 0, 10);
-
+  
   TH1D* h_multtracktol_total = new TH1D("h_multtracktol_total", "; Track Multiplicity (5 cm)", 10, 0, 10);
   TH1D* h_multtracktol_signal = new TH1D("h_multtracktol_signal", "; Track Multiplicity (5 cm);", 10, 0, 10);
   TH1D* h_multtracktol_cosmic = new TH1D("h_multtracktol_cosmic", "; Track Multiplicity (5 cm);", 10, 0, 10);
@@ -317,7 +317,7 @@ int main(int argc, char* argv[]) {
   TH1D* h_multtracktol_nc_proton = new TH1D("h_multtracktol_nc_proton", "; Track Multiplicity (5 cm);", 10, 0, 10);
   TH1D* h_multtracktol_nc_pion = new TH1D("h_multtracktol_nc_pion", "; Track Multiplicity (5 cm);", 10, 0, 10);
   TH1D* h_multtracktol_nc_other = new TH1D("h_multtracktol_nc_other", "; Track Multiplicity (5 cm);", 10, 0, 10);
-
+  
   
   int barWidth = 70;
   
@@ -746,7 +746,7 @@ int main(int argc, char* argv[]) {
       h_trktheta_outfv->Fill(at->slc_longesttrack_theta->at(scl_ll_max));
       h_multpfp_outfv->Fill(at->slc_mult_pfp->at(scl_ll_max));
       h_multtracktol_outfv->Fill(at->slc_mult_track_tolerance->at(scl_ll_max));
-
+      
       if (at->slc_origin_extra->at(scl_ll_max) == 0) {
         h_trklen_outfv_stopmu->Fill(at->slc_longesttrack_length->at(scl_ll_max));
       } else {
@@ -979,27 +979,40 @@ int main(int argc, char* argv[]) {
   
   TCanvas * final1 = new TCanvas();
   THStack *hs_trklen = new THStack("hs_trklen",";Candidate Track Length [cm]; Selected Events");
-  h_trklen_cosmic_nostopmu->SetLineColor(kBlue+2);
-  h_trklen_cosmic_nostopmu->SetFillColor(kBlue+2);
-  hs_trklen->Add(h_trklen_cosmic_nostopmu);
-  h_trklen_cosmic_stopmu->SetLineColor(kBlue);
-  h_trklen_cosmic_stopmu->SetFillColor(kBlue);
-  hs_trklen->Add(h_trklen_cosmic_stopmu);
-  h_trklen_outfv_nostopmu->SetLineColor(kOrange+3);
-  h_trklen_outfv_nostopmu->SetFillColor(kOrange+3);
-  hs_trklen->Add(h_trklen_outfv_nostopmu);
-  h_trklen_outfv_stopmu->SetLineColor(kOrange+2);
-  h_trklen_outfv_stopmu->SetFillColor(kOrange+2);
-  hs_trklen->Add(h_trklen_outfv_stopmu);
-  h_trklen_nc_proton->SetLineColor(kGray+2);
-  h_trklen_nc_proton->SetFillColor(kGray+2);
-  hs_trklen->Add(h_trklen_nc_proton);
-  h_trklen_nc_pion->SetLineColor(kGray+1);
-  h_trklen_nc_pion->SetFillColor(kGray+1);
-  hs_trklen->Add(h_trklen_nc_pion);
-  h_trklen_nc_other->SetLineColor(kGray);
-  h_trklen_nc_other->SetFillColor(kGray);
-  hs_trklen->Add(h_trklen_nc_other);
+  if (_breackdownPlots) {
+    h_trklen_cosmic_nostopmu->SetLineColor(kBlue+2);
+    h_trklen_cosmic_nostopmu->SetFillColor(kBlue+2);
+    hs_trklen->Add(h_trklen_cosmic_nostopmu);
+    h_trklen_cosmic_stopmu->SetLineColor(kBlue);
+    h_trklen_cosmic_stopmu->SetFillColor(kBlue);
+    hs_trklen->Add(h_trklen_cosmic_stopmu);
+    h_trklen_outfv_nostopmu->SetLineColor(kOrange+3);
+    h_trklen_outfv_nostopmu->SetFillColor(kOrange+3);
+    hs_trklen->Add(h_trklen_outfv_nostopmu);
+    h_trklen_outfv_stopmu->SetLineColor(kOrange+2);
+    h_trklen_outfv_stopmu->SetFillColor(kOrange+2);
+    hs_trklen->Add(h_trklen_outfv_stopmu);
+    h_trklen_nc_proton->SetLineColor(kGray+2);
+    h_trklen_nc_proton->SetFillColor(kGray+2);
+    hs_trklen->Add(h_trklen_nc_proton);
+    h_trklen_nc_pion->SetLineColor(kGray+1);
+    h_trklen_nc_pion->SetFillColor(kGray+1);
+    hs_trklen->Add(h_trklen_nc_pion);
+    h_trklen_nc_other->SetLineColor(kGray);
+    h_trklen_nc_other->SetFillColor(kGray);
+    hs_trklen->Add(h_trklen_nc_other);
+  }
+  else {
+    h_trklen_cosmic->SetLineColor(kBlue+2);
+    h_trklen_cosmic->SetFillColor(kBlue+2);
+    hs_trklen->Add(h_trklen_cosmic);
+    h_trklen_outfv->SetLineColor(kOrange+3);
+    h_trklen_outfv->SetFillColor(kOrange+3);
+    hs_trklen->Add(h_trklen_outfv);
+    h_trklen_nc->SetLineColor(kGray);
+    h_trklen_nc->SetFillColor(kGray);
+    hs_trklen->Add(h_trklen_nc);
+  }
   h_trklen_anumu->SetLineColor(kOrange-3);
   h_trklen_anumu->SetFillColor(kOrange-3);
   hs_trklen->Add(h_trklen_anumu);
