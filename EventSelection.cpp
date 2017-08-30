@@ -22,6 +22,8 @@
 //#include "PlotHandler.hpp"
 //#include "SelectionTools.hpp"
 
+const bool _breackdownPlots = true;
+
 const double _beamSpillStarts = 3.2; // us
 const double _beamSpillEnds   = 4.8; // us
 
@@ -256,7 +258,12 @@ int main(int argc, char* argv[]) {
   TH1D* h_trklen_nue = new TH1D("h_trklen_nue", "; Track length;", 30, 0, 700);
   TH1D* h_trklen_cosmic_stopmu = new TH1D("h_trklen_cosmic_stopmu", "; Track length;", 30, 0, 700);
   TH1D* h_trklen_cosmic_nostopmu = new TH1D("h_trklen_cosmic_nostopmu", "; Track length;", 30, 0, 700);
-  
+  TH1D* h_trklen_outfv_stopmu = new TH1D("h_trklen_outfv_stopmu", "; Track length;", 30, 0, 700);
+  TH1D* h_trklen_outfv_nostopmu = new TH1D("h_trklen_outfv_nostopmu", "; Track length;", 30, 0, 700);
+  TH1D* h_trklen_nc_proton = new TH1D("h_trklen_nc_proton", "; Track length;", 30, 0, 700);
+  TH1D* h_trklen_nc_pion = new TH1D("h_trklen_nc_pion", "; Track length;", 30, 0, 700);
+  TH1D* h_trklen_nc_other = new TH1D("h_trklen_nc_other", "; Track length;", 30, 0, 700);
+
   TH1D* h_trkphi_total = new TH1D("h_trkphi_total", "; Track #phi;", 20, -3.15, 3.15);
   TH1D* h_trkphi_signal = new TH1D("h_trkphi_signal", "; Track #phi;", 20, -3.15, 3.15);
   TH1D* h_trkphi_cosmic = new TH1D("h_trkphi_cosmic", "; Track #phi;", 20, -3.15, 3.15);
@@ -266,7 +273,12 @@ int main(int argc, char* argv[]) {
   TH1D* h_trkphi_nue = new TH1D("h_trkphi_nue", "; Track #phi;", 20, -3.15, 3.15);
   TH1D* h_trkphi_cosmic_stopmu = new TH1D("h_trkphi_cosmic_stopmu", "; Track #phi;", 20, -3.15, 3.15);
   TH1D* h_trkphi_cosmic_nostopmu = new TH1D("h_trkphi_cosmic_nostopmu", "; Track #phi;", 20, -3.15, 3.15);
-  
+  TH1D* h_trkphi_outfv_stopmu = new TH1D("h_trkphi_outfv_stopmu", "; Track #phi;", 20, -3.15, 3.15);
+  TH1D* h_trkphi_outfv_nostopmu = new TH1D("h_trkphi_outfv_nostopmu", "; Track #phi;", 20, -3.15, 3.15);
+  TH1D* h_trkphi_nc_proton = new TH1D("h_trkphi_nc_proton", "; Track #phi;", 20, -3.15, 3.15);
+  TH1D* h_trkphi_nc_pion = new TH1D("h_trkphi_nc_pion", "; Track #phi;", 20, -3.15, 3.15);
+  TH1D* h_trkphi_nc_other = new TH1D("h_trkphi_nc_other", "; Track #phi;", 20, -3.15, 3.15);
+
   TH1D* h_trktheta_total = new TH1D("h_trktheta_total", "; Track cos(#theta);", 30, -1, 1);
   TH1D* h_trktheta_signal = new TH1D("h_trktheta_signal", "; Track cos(#theta);", 30, -1, 1);
   TH1D* h_trktheta_cosmic = new TH1D("h_trktheta_cosmic", "; Track cos(#theta);", 30, -1, 1);
@@ -276,7 +288,10 @@ int main(int argc, char* argv[]) {
   TH1D* h_trktheta_nue = new TH1D("h_trktheta_nue", "; Track cos(#theta);", 30, -1, 1);
   TH1D* h_trktheta_cosmic_stopmu = new TH1D("h_trktheta_cosmic_stopmu", "; Track cos(#theta);", 30, -1, 1);
   TH1D* h_trktheta_cosmic_nostopmu = new TH1D("h_trktheta_cosmic_nostopmu", "; Track cos(#theta);", 30, -1, 1);
-  
+  TH1D* h_trktheta_nc_proton = new TH1D("h_trktheta_nc_proton", "; Track cos(#theta);", 30, -1, 1);
+  TH1D* h_trktheta_nc_pion = new TH1D("h_trktheta_nc_pion", "; Track cos(#theta);", 30, -1, 1);
+  TH1D* h_trktheta_nc_other = new TH1D("h_trktheta_nc_other", "; Track cos(#theta);", 30, -1, 1);
+
   TH1D* h_multpfp_total = new TH1D("h_multpfp_total", "; PFP Multiplicity", 10, 0, 10);
   TH1D* h_multpfp_signal = new TH1D("h_multpfp_signal", "; PFP Multiplicity;", 10, 0, 10);
   TH1D* h_multpfp_cosmic = new TH1D("h_multpfp_cosmic", "; PFP Multiplicity;", 10, 0, 10);
@@ -286,7 +301,10 @@ int main(int argc, char* argv[]) {
   TH1D* h_multpfp_nue = new TH1D("h_multpfp_nue", "; PFP Multiplicity;", 10, 0, 10);
   TH1D* h_multpfp_cosmic_stopmu = new TH1D("h_multpfp_cosmic_stopmu", "; PFP Multiplicity;", 10, 0, 10);
   TH1D* h_multpfp_cosmic_nostopmu = new TH1D("h_multpfp_cosmic_nostopmu", "; PFP Multiplicity;", 10, 0, 10);
-  
+  TH1D* h_multpfp_nc_proton = new TH1D("h_multpfp_nc_proton", "; PFP Multiplicity;", 10, 0, 10);
+  TH1D* h_multpfp_nc_pion = new TH1D("h_multpfp_nc_pion", "; PFP Multiplicity;", 10, 0, 10);
+  TH1D* h_multpfp_nc_other = new TH1D("h_multpfp_nc_other", "; PFP Multiplicity;", 10, 0, 10);
+
   TH1D* h_multtracktol_total = new TH1D("h_multtracktol_total", "; Track Multiplicity (5 cm)", 10, 0, 10);
   TH1D* h_multtracktol_signal = new TH1D("h_multtracktol_signal", "; Track Multiplicity (5 cm);", 10, 0, 10);
   TH1D* h_multtracktol_cosmic = new TH1D("h_multtracktol_cosmic", "; Track Multiplicity (5 cm);", 10, 0, 10);
@@ -296,7 +314,10 @@ int main(int argc, char* argv[]) {
   TH1D* h_multtracktol_nue = new TH1D("h_multtracktol_nue", "; Track Multiplicity (5 cm);", 10, 0, 10);
   TH1D* h_multtracktol_cosmic_stopmu = new TH1D("h_multtracktol_cosmic_stopmu", "; Track Multiplicity (5 cm);", 10, 0, 10);
   TH1D* h_multtracktol_cosmic_nostopmu = new TH1D("h_multtracktol_cosmic_nostopmu", "; Track Multiplicity (5 cm);", 10, 0, 10);
-  
+  TH1D* h_multtracktol_nc_proton = new TH1D("h_multtracktol_nc_proton", "; Track Multiplicity (5 cm);", 10, 0, 10);
+  TH1D* h_multtracktol_nc_pion = new TH1D("h_multtracktol_nc_pion", "; Track Multiplicity (5 cm);", 10, 0, 10);
+  TH1D* h_multtracktol_nc_other = new TH1D("h_multtracktol_nc_other", "; Track Multiplicity (5 cm);", 10, 0, 10);
+
   
   int barWidth = 70;
   
@@ -686,6 +707,33 @@ int main(int argc, char* argv[]) {
       h_trktheta_nc->Fill(at->slc_longesttrack_theta->at(scl_ll_max));
       h_multpfp_nc->Fill(at->slc_mult_pfp->at(scl_ll_max));
       h_multtracktol_nc->Fill(at->slc_mult_track_tolerance->at(scl_ll_max));
+      h_trktheta_nc->Fill(at->slc_longesttrack_theta->at(scl_ll_max));
+      h_multpfp_nc->Fill(at->slc_mult_pfp->at(scl_ll_max));
+      h_multtracktol_nc->Fill(at->slc_mult_track_tolerance->at(scl_ll_max));
+      // proton
+      if (at->slc_origin_extra->at(scl_ll_max) == 3) {
+        h_trklen_nc_proton->Fill(at->slc_longesttrack_length->at(scl_ll_max));
+        h_trkphi_nc_proton->Fill(at->slc_longesttrack_phi->at(scl_ll_max));
+        h_trktheta_nc_proton->Fill(at->slc_longesttrack_theta->at(scl_ll_max));
+        h_multpfp_nc_proton->Fill(at->slc_mult_pfp->at(scl_ll_max));
+        h_multtracktol_nc_proton->Fill(at->slc_mult_track_tolerance->at(scl_ll_max));
+      }
+      //pion
+      else if (at->slc_origin_extra->at(scl_ll_max) == 2) {
+        h_trklen_nc_pion->Fill(at->slc_longesttrack_length->at(scl_ll_max));
+        h_trkphi_nc_pion->Fill(at->slc_longesttrack_phi->at(scl_ll_max));
+        h_trktheta_nc_pion->Fill(at->slc_longesttrack_theta->at(scl_ll_max));
+        h_multpfp_nc_pion->Fill(at->slc_mult_pfp->at(scl_ll_max));
+        h_multtracktol_nc_pion->Fill(at->slc_mult_track_tolerance->at(scl_ll_max));
+      }
+      // other
+      else {
+        h_trklen_nc_other->Fill(at->slc_longesttrack_length->at(scl_ll_max));
+        h_trkphi_nc_other->Fill(at->slc_longesttrack_phi->at(scl_ll_max));
+        h_trktheta_nc_other->Fill(at->slc_longesttrack_theta->at(scl_ll_max));
+        h_multpfp_nc_other->Fill(at->slc_mult_pfp->at(scl_ll_max));
+        h_multtracktol_nc_other->Fill(at->slc_mult_track_tolerance->at(scl_ll_max));
+      }
       //std::cout << "Is a nc but is selected. event: " << at->event << std::endl;
     }
     // outfv
@@ -698,6 +746,12 @@ int main(int argc, char* argv[]) {
       h_trktheta_outfv->Fill(at->slc_longesttrack_theta->at(scl_ll_max));
       h_multpfp_outfv->Fill(at->slc_mult_pfp->at(scl_ll_max));
       h_multtracktol_outfv->Fill(at->slc_mult_track_tolerance->at(scl_ll_max));
+
+      if (at->slc_origin_extra->at(scl_ll_max) == 0) {
+        h_trklen_outfv_stopmu->Fill(at->slc_longesttrack_length->at(scl_ll_max));
+      } else {
+        h_trklen_outfv_nostopmu->Fill(at->slc_longesttrack_length->at(scl_ll_max));
+      }
       //if (at->slc_mult_track_tolerance->at(scl_ll_max) == 2) std::cout << "Is OutFV with mult_track_tolerance=2. event: " << at->event << std::endl;
     }
     // cosmic
@@ -931,12 +985,21 @@ int main(int argc, char* argv[]) {
   h_trklen_cosmic_stopmu->SetLineColor(kBlue);
   h_trklen_cosmic_stopmu->SetFillColor(kBlue);
   hs_trklen->Add(h_trklen_cosmic_stopmu);
-  h_trklen_outfv->SetLineColor(kOrange+3);
-  h_trklen_outfv->SetFillColor(kOrange+3);
-  hs_trklen->Add(h_trklen_outfv);
-  h_trklen_nc->SetLineColor(kGray);
-  h_trklen_nc->SetFillColor(kGray);
-  hs_trklen->Add(h_trklen_nc);
+  h_trklen_outfv_nostopmu->SetLineColor(kOrange+3);
+  h_trklen_outfv_nostopmu->SetFillColor(kOrange+3);
+  hs_trklen->Add(h_trklen_outfv_nostopmu);
+  h_trklen_outfv_stopmu->SetLineColor(kOrange+2);
+  h_trklen_outfv_stopmu->SetFillColor(kOrange+2);
+  hs_trklen->Add(h_trklen_outfv_stopmu);
+  h_trklen_nc_proton->SetLineColor(kGray+2);
+  h_trklen_nc_proton->SetFillColor(kGray+2);
+  hs_trklen->Add(h_trklen_nc_proton);
+  h_trklen_nc_pion->SetLineColor(kGray+1);
+  h_trklen_nc_pion->SetFillColor(kGray+1);
+  hs_trklen->Add(h_trklen_nc_pion);
+  h_trklen_nc_other->SetLineColor(kGray);
+  h_trklen_nc_other->SetFillColor(kGray);
+  hs_trklen->Add(h_trklen_nc_other);
   h_trklen_anumu->SetLineColor(kOrange-3);
   h_trklen_anumu->SetFillColor(kOrange-3);
   hs_trklen->Add(h_trklen_anumu);
@@ -953,8 +1016,11 @@ int main(int argc, char* argv[]) {
   leg2->AddEntry(h_trklen_signal,"#nu_{#mu} CC (signal)","f");
   leg2->AddEntry(h_trklen_nue,"#nu_{e}, #bar{#nu}_{e} CC","f");
   leg2->AddEntry(h_trklen_anumu,"#bar{#nu}_{#mu} CC","f");
-  leg2->AddEntry(h_trklen_nc,"NC","f");
-  leg2->AddEntry(h_trklen_outfv,"OUTFV","f");
+  leg2->AddEntry(h_trklen_nc_other,"NC (other)","f");
+  leg2->AddEntry(h_trklen_nc_pion,"NC (pion)","f");
+  leg2->AddEntry(h_trklen_nc_proton,"NC (proton)","f");
+  leg2->AddEntry(h_trklen_outfv_stopmu,"OUTFV (stopping #mu)","f");
+  leg2->AddEntry(h_trklen_outfv_nostopmu,"OUTFV (other)","f");
   leg2->AddEntry(h_trklen_cosmic_stopmu,"Cosmic (stopping #mu)","f");
   leg2->AddEntry(h_trklen_cosmic_nostopmu,"Cosmic (other)","f");
   leg2->AddEntry(h_trklen_total,"MC Stat Unc.","e");
@@ -977,9 +1043,15 @@ int main(int argc, char* argv[]) {
   h_trkphi_outfv->SetLineColor(kOrange+3);
   h_trkphi_outfv->SetFillColor(kOrange+3);
   hs_trkphi->Add(h_trkphi_outfv);
-  h_trkphi_nc->SetLineColor(kGray);
-  h_trkphi_nc->SetFillColor(kGray);
-  hs_trkphi->Add(h_trkphi_nc);
+  h_trkphi_nc_proton->SetLineColor(kGray+2);
+  h_trkphi_nc_proton->SetFillColor(kGray+2);
+  hs_trkphi->Add(h_trkphi_nc_proton);
+  h_trkphi_nc_pion->SetLineColor(kGray+1);
+  h_trkphi_nc_pion->SetFillColor(kGray+1);
+  hs_trkphi->Add(h_trkphi_nc_pion);
+  h_trkphi_nc_other->SetLineColor(kGray);
+  h_trkphi_nc_other->SetFillColor(kGray);
+  hs_trkphi->Add(h_trkphi_nc_other);
   h_trkphi_anumu->SetLineColor(kOrange-3);
   h_trkphi_anumu->SetFillColor(kOrange-3);
   hs_trkphi->Add(h_trkphi_anumu);
@@ -1011,9 +1083,15 @@ int main(int argc, char* argv[]) {
   h_trktheta_outfv->SetLineColor(kOrange+3);
   h_trktheta_outfv->SetFillColor(kOrange+3);
   hs_trktheta->Add(h_trktheta_outfv);
-  h_trktheta_nc->SetLineColor(kGray);
-  h_trktheta_nc->SetFillColor(kGray);
-  hs_trktheta->Add(h_trktheta_nc);
+  h_trktheta_nc_proton->SetLineColor(kGray+2);
+  h_trktheta_nc_proton->SetFillColor(kGray+2);
+  hs_trktheta->Add(h_trktheta_nc_proton);
+  h_trktheta_nc_pion->SetLineColor(kGray+1);
+  h_trktheta_nc_pion->SetFillColor(kGray+1);
+  hs_trktheta->Add(h_trktheta_nc_pion);
+  h_trktheta_nc_other->SetLineColor(kGray);
+  h_trktheta_nc_other->SetFillColor(kGray);
+  hs_trktheta->Add(h_trktheta_nc_other);
   h_trktheta_anumu->SetLineColor(kOrange-3);
   h_trktheta_anumu->SetFillColor(kOrange-3);
   hs_trktheta->Add(h_trktheta_anumu);
@@ -1045,9 +1123,15 @@ int main(int argc, char* argv[]) {
   h_multpfp_outfv->SetLineColor(kOrange+3);
   h_multpfp_outfv->SetFillColor(kOrange+3);
   hs_multpfp->Add(h_multpfp_outfv);
-  h_multpfp_nc->SetLineColor(kGray);
-  h_multpfp_nc->SetFillColor(kGray);
-  hs_multpfp->Add(h_multpfp_nc);
+  h_multpfp_nc_proton->SetLineColor(kGray+2);
+  h_multpfp_nc_proton->SetFillColor(kGray+2);
+  hs_multpfp->Add(h_multpfp_nc_proton);
+  h_multpfp_nc_pion->SetLineColor(kGray+1);
+  h_multpfp_nc_pion->SetFillColor(kGray+1);
+  hs_multpfp->Add(h_multpfp_nc_pion);
+  h_multpfp_nc_other->SetLineColor(kGray);
+  h_multpfp_nc_other->SetFillColor(kGray);
+  hs_multpfp->Add(h_multpfp_nc_other);
   h_multpfp_anumu->SetLineColor(kOrange-3);
   h_multpfp_anumu->SetFillColor(kOrange-3);
   hs_multpfp->Add(h_multpfp_anumu);
@@ -1079,9 +1163,15 @@ int main(int argc, char* argv[]) {
   h_multtracktol_outfv->SetLineColor(kOrange+3);
   h_multtracktol_outfv->SetFillColor(kOrange+3);
   hs_multtracktol->Add(h_multtracktol_outfv);
-  h_multtracktol_nc->SetLineColor(kGray);
-  h_multtracktol_nc->SetFillColor(kGray);
-  hs_multtracktol->Add(h_multtracktol_nc);
+  h_multtracktol_nc_proton->SetLineColor(kGray+2);
+  h_multtracktol_nc_proton->SetFillColor(kGray+2);
+  hs_multtracktol->Add(h_multtracktol_nc_proton);
+  h_multtracktol_nc_pion->SetLineColor(kGray+1);
+  h_multtracktol_nc_pion->SetFillColor(kGray+1);
+  hs_multtracktol->Add(h_multtracktol_nc_pion);
+  h_multtracktol_nc_other->SetLineColor(kGray);
+  h_multtracktol_nc_other->SetFillColor(kGray);
+  hs_multtracktol->Add(h_multtracktol_nc_other);
   h_multtracktol_anumu->SetLineColor(kOrange-3);
   h_multtracktol_anumu->SetFillColor(kOrange-3);
   hs_multtracktol->Add(h_multtracktol_anumu);
