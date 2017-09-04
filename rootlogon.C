@@ -8,7 +8,7 @@ void rootlogon()
 
   // Defaults to classic style, but that's OK, we can fix it
   TStyle* novaStyle = new TStyle("novaStyle", "NOvA Style");
-
+  
   // Centre title
   novaStyle->SetTitleAlign(22);
   novaStyle->SetTitleX(.5);

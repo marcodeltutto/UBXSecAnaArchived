@@ -1,8 +1,8 @@
 //////////////////////////////////////////////////////////
 // This class has been automatically generated on
-// Sun Aug 27 21:35:39 2017 by ROOT version 6.06/06
+// Wed Aug 30 15:52:39 2017 by ROOT version 6.06/06
 // from TTree tree/
-// found on file: ../files/ubxsec_output_mc_9.root
+// found on file: ../files/ubxsec_output_mc_10.root
 //////////////////////////////////////////////////////////
 
 #ifndef AnaTree_h
@@ -92,6 +92,7 @@ public :
    vector<double>  *slc_kalman_chi2;
    vector<int>     *slc_kalman_ndof;
    vector<bool>    *slc_passed_min_track_quality;
+   vector<bool>    *slc_passed_min_vertex_quality;
    vector<double>  *slc_n_intime_pe_closestpmt;
    vector<double>  *slc_maxdistance_vtxtrack;
    vector<int>     *slc_npfp;
@@ -191,6 +192,7 @@ public :
    TBranch        *b_slc_kalman_chi2;   //!
    TBranch        *b_slc_kalman_ndof;   //!
    TBranch        *b_slc_passed_min_track_quality;   //!
+   TBranch        *b_slc_passed_min_vertex_quality;   //!
    TBranch        *b_slc_n_intime_pe_closestpmt;   //!
    TBranch        *b_slc_maxdistance_vtxtrack;   //!
    TBranch        *b_slc_npfp;   //!
@@ -244,11 +246,11 @@ AnaTree::AnaTree(TTree *tree) : fChain(0)
 // if parameter tree is not specified (or zero), connect the file
 // used to generate this class and read the Tree.
    if (tree == 0) {
-      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("../files/ubxsec_output_mc_9.root");
+      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("../files/ubxsec_output_mc_10.root");
       if (!f || !f->IsOpen()) {
-         f = new TFile("../files/ubxsec_output_mc_9.root");
+         f = new TFile("../files/ubxsec_output_mc_10.root");
       }
-      TDirectory * dir = (TDirectory*)f->Get("../files/ubxsec_output_mc_9.root:/UBXSec");
+      TDirectory * dir = (TDirectory*)f->Get("../files/ubxsec_output_mc_10.root:/UBXSec");
       dir->GetObject("tree",tree);
 
    }
@@ -322,6 +324,7 @@ void AnaTree::Init(TTree *tree)
    slc_kalman_chi2 = 0;
    slc_kalman_ndof = 0;
    slc_passed_min_track_quality = 0;
+   slc_passed_min_vertex_quality = 0;
    slc_n_intime_pe_closestpmt = 0;
    slc_maxdistance_vtxtrack = 0;
    slc_npfp = 0;
@@ -421,6 +424,7 @@ void AnaTree::Init(TTree *tree)
    fChain->SetBranchAddress("slc_kalman_chi2", &slc_kalman_chi2, &b_slc_kalman_chi2);
    fChain->SetBranchAddress("slc_kalman_ndof", &slc_kalman_ndof, &b_slc_kalman_ndof);
    fChain->SetBranchAddress("slc_passed_min_track_quality", &slc_passed_min_track_quality, &b_slc_passed_min_track_quality);
+   fChain->SetBranchAddress("slc_passed_min_vertex_quality", &slc_passed_min_vertex_quality, &b_slc_passed_min_vertex_quality);
    fChain->SetBranchAddress("slc_n_intime_pe_closestpmt", &slc_n_intime_pe_closestpmt, &b_slc_n_intime_pe_closestpmt);
    fChain->SetBranchAddress("slc_maxdistance_vtxtrack", &slc_maxdistance_vtxtrack, &b_slc_maxdistance_vtxtrack);
    fChain->SetBranchAddress("slc_npfp", &slc_npfp, &b_slc_npfp);
