@@ -200,6 +200,10 @@ int main(int argc, char* argv[]) {
   int nEvtsWFlashInBeamSpill = 0;
   int nNumuCC = 0;
   
+  int nue_cc_fv = 0;
+  int nue_cc_selected = 0;
+  int nue_cc_selected_total = 0;
+
   int nSignalWMuonReco = 0;
   int nSignalMuonRecoVtxOk = 0;
   
@@ -475,6 +479,12 @@ int main(int argc, char* argv[]) {
       nNumuCC++;
     }
     
+    
+    bool isNueCC = false;
+    if (at->nupdg == 12 && at->ccnc == 0 && at->fv == 1) {
+      isNueCC = true;
+      nue_cc_fv++;
+    }
     //if (isSignal) std::cout << "IS SIGNAL - event " << at->event << std::endl;
     
     
@@ -725,6 +735,10 @@ int main(int argc, char* argv[]) {
     bool nu_origin = false;
     if ((at->slc_origin->at(scl_ll_max) == 0 || at->slc_origin->at(scl_ll_max) == 2)) nu_origin = true;
     
+    if (isNueCC) {
+      nue_cc_selected_total++;
+    }
+    
     // Signal
     if(nu_origin && at->ccnc==0 && at->nupdg==14 && at->fv==1){
       signal_sel ++;
@@ -771,6 +785,8 @@ int main(int argc, char* argv[]) {
       hmap_trktheta["nue"]->Fill(at->slc_longesttrack_theta->at(scl_ll_max));
       hmap_multpfp["nue"]->Fill(at->slc_mult_pfp->at(scl_ll_max));
       hmap_multtracktol["nue"]->Fill(at->slc_mult_track_tolerance->at(scl_ll_max));
+      if (at->nupdg == 12)
+        nue_cc_selected++;
     }
     // nc
     else if(nu_origin && at->ccnc==1 && at->fv==1){
@@ -779,9 +795,6 @@ int main(int argc, char* argv[]) {
       pEff->Fill(false, at->nu_e);
       hmap_trklen["nc"]->Fill(at->slc_longesttrack_length->at(scl_ll_max));
       hmap_trkphi["nc"]->Fill(at->slc_longesttrack_phi->at(scl_ll_max));
-      hmap_trktheta["nc"]->Fill(at->slc_longesttrack_theta->at(scl_ll_max));
-      hmap_multpfp["nc"]->Fill(at->slc_mult_pfp->at(scl_ll_max));
-      hmap_multtracktol["nc"]->Fill(at->slc_mult_track_tolerance->at(scl_ll_max));
       hmap_trktheta["nc"]->Fill(at->slc_longesttrack_theta->at(scl_ll_max));
       hmap_multpfp["nc"]->Fill(at->slc_mult_pfp->at(scl_ll_max));
       hmap_multtracktol["nc"]->Fill(at->slc_mult_track_tolerance->at(scl_ll_max));
@@ -919,11 +932,14 @@ int main(int argc, char* argv[]) {
   std::cout << "Number of signal events that were correctly flash-matched: " << nSignalFlashMatched << std::endl << std::endl;
   
   std::cout << "Number of neutrino origin slices in total: " << n_slc_nu_origin << std::endl;
-  std::cout << "Number of neutrino origin slices tagged as cosmic by the ACPT algo in total: " << n_slc_acpt_tag_nu << std::endl;
+  std::cout << "Number of neutrino origin slices tagged as cosmic by the ACPT algo in total: " << n_slc_acpt_tag_nu << std::endl << std::endl;
   
   
   
-  
+  std::cout << "Number of simulated nue CC in FV: " << nue_cc_fv << std::endl;
+  std::cout << "Number of selected nue CC in FV (as such):  " << nue_cc_selected << std::endl;
+  std::cout << "Number of selected nue CC in FV (total):  " << nue_cc_selected_total << std::endl;
+  //std::cout << "\t Ratio: " << (double)nue_cc_selected/(double)nue_cc_fv << std::endl;
   
   
   
@@ -933,21 +949,36 @@ int main(int argc, char* argv[]) {
   //
   // ************************
   
-  new TCanvas();
+  TString temp2;
+  
+  TCanvas * canvas_efficiency = new TCanvas();
   TEfficiency* pEff2 = new TEfficiency(*h_eff_num,*h_eff_den);
   pEff2->SetTitle(";True Neutrino Energy [GeV];Efficiency");
+  pEff2->SetLineColor(kGreen+3);
+  pEff2->SetMarkerColor(kGreen+3);
+  pEff2->SetMarkerStyle(20);
+  pEff2->SetMarkerSize(0.5);
   pEff2->Draw("AP");
   
-  new TCanvas();
+  temp2 = "./output/efficiency";
+  canvas_efficiency->SaveAs(temp2 + ".pdf");
+  canvas_efficiency->SaveAs(temp2 + ".C","C");
+  
+  TCanvas * canvas_muon_reco_efficiency = new TCanvas();
   TEfficiency* pEff3 = new TEfficiency(*h_mueff_num,*h_mueff_den);
   pEff3->SetTitle(";True Muon Momentum [GeV];Reconstruction Efficiency");
   pEff3->Draw("AP");
   
-  //TCanvas *c33 = new TCanvas();
+  temp2 = "./output/muon_reco_efficiency";
+  canvas_muon_reco_efficiency->SaveAs(temp2 + ".pdf");
+  canvas_muon_reco_efficiency->SaveAs(temp2 + ".C","C");
+  
+  /*TCanvas *c33 = new TCanvas();
   TEfficiency* pEff4 = new TEfficiency(*h_mueff_2_num,*h_mueff_den);
   pEff4->SetTitle(";True Muon Momentum [GeV];Reconstruction Efficiency");
   pEff4->SetLineColor(kRed);
   pEff4->Draw("P same");
+   */
   
   
   new TCanvas();
@@ -1008,8 +1039,6 @@ int main(int argc, char* argv[]) {
   leg->Draw();
   
   new TCanvas();
-  std::cout << "h_vtxcheck_angle_good->Integral() " << h_vtxcheck_angle_good->Integral() << std::endl;
-  std::cout << "h_vtxcheck_angle_bad->Integral() " << h_vtxcheck_angle_bad->Integral() << std::endl;
   h_vtxcheck_angle_good->Scale(1./h_vtxcheck_angle_good->Integral());
   h_vtxcheck_angle_bad->Scale(1./h_vtxcheck_angle_bad->Integral());
   h_vtxcheck_angle_good->Draw("histo");
@@ -1076,11 +1105,36 @@ int main(int argc, char* argv[]) {
                 targetPOT/totalPOT,
                 hmap_trklen);
   
-  TLegend* leg2 = new TLegend(0.58,0.46,0.82,0.82,NULL,"brNDC");
+  // Construct legend
+  TLegend* leg2;
+  if (_breackdownPlots){
+    leg2 = new TLegend(0.56,0.37,0.82,0.82,NULL,"brNDC");
+  } else {
+    leg2 = new TLegend(0.56,0.54,0.82,0.82,NULL,"brNDC");
+  }
+  std::stringstream sstm;
+  // numu
+  if (_breackdownPlots) {
   leg2->AddEntry(hmap_trklen["signal_stopmu"],"#nu_{#mu} CC (stopping #mu)","f");
   leg2->AddEntry(hmap_trklen["signal_nostopmu"],"#nu_{#mu} CC (other)","f");
-  leg2->AddEntry(hmap_trklen["nue"],"#nu_{e}, #bar{#nu}_{e} CC","f");
-  leg2->AddEntry(hmap_trklen["anumu"],"#bar{#nu}_{#mu} CC","f");
+  } else {
+    sstm << "#nu_{#mu} CC (signal), " << std::setprecision(2)  << hmap_trklen["signal"]->Integral() / hmap_trklen["total"]->Integral()*100. << "%";
+    leg2->AddEntry(hmap_trklen["signal"],sstm.str().c_str(),"f");
+    sstm.str("");
+  }
+  
+  // nue
+  sstm << "#nu_{e}, #bar{#nu}_{e} CC, " << std::setprecision(2)  << hmap_trklen["nue"]->Integral() / hmap_trklen["total"]->Integral()*100. << "%";
+  leg2->AddEntry(hmap_trklen["nue"],sstm.str().c_str(),"f");
+  sstm.str("");
+  
+  // anumu
+  sstm << "#bar{#nu}_{#mu} CC, " << std::setprecision(2)  << hmap_trklen["anumu"]->Integral() / hmap_trklen["total"]->Integral()*100. << "%";
+  leg2->AddEntry(hmap_trklen["anumu"],sstm.str().c_str(),"f");
+  sstm.str("");
+  
+  // nc, outfv, cosmic
+  if (_breackdownPlots) {
   leg2->AddEntry(hmap_trklen["nc_other"],"NC (other)","f");
   leg2->AddEntry(hmap_trklen["nc_pion"],"NC (pion)","f");
   leg2->AddEntry(hmap_trklen["nc_proton"],"NC (proton)","f");
@@ -1088,11 +1142,24 @@ int main(int argc, char* argv[]) {
   leg2->AddEntry(hmap_trklen["outfv_nostopmu"],"OUTFV (other)","f");
   leg2->AddEntry(hmap_trklen["cosmic_stopmu"],"Cosmic (stopping #mu)","f");
   leg2->AddEntry(hmap_trklen["cosmic_nostopmu"],"Cosmic (other)","f");
+  } else {
+    sstm << "NC, " << std::setprecision(2)  << hmap_trklen["nc"]->Integral() / hmap_trklen["total"]->Integral()*100. << "%";
+    leg2->AddEntry(hmap_trklen["nc"],sstm.str().c_str(),"f");
+    sstm.str("");
+    
+    sstm << "OUTFV, " << std::setprecision(2)  << hmap_trklen["outfv"]->Integral() / hmap_trklen["total"]->Integral()*100. << "%";
+    leg2->AddEntry(hmap_trklen["outfv"],sstm.str().c_str(),"f");
+    sstm.str("");
+    
+    sstm << "Cosmic, " << std::setprecision(2)  << hmap_trklen["cosmic"]->Integral() / hmap_trklen["total"]->Integral()*100. << "%";
+    leg2->AddEntry(hmap_trklen["cosmic"],sstm.str().c_str(),"f");
+    sstm.str("");
+  }
   leg2->AddEntry(hmap_trklen["total"],"MC Stat Unc.","f");
   leg2->Draw();
   DrawPOT(totalPOT);
   
-  TString temp2 = "./output/trklen";
+  temp2 = "./output/trklen";
   final1->SaveAs(temp2 + ".pdf");
   final1->SaveAs(temp2 + ".C","C");
   
@@ -1220,8 +1287,8 @@ void DrawTHStack(THStack *hs_trklen,
     themap["cosmic"]->SetLineColor(kBlue+2);
     themap["cosmic"]->SetFillColor(kBlue+2);
     hs_trklen->Add(themap["cosmic"]);
-    themap["outfv"]->SetLineColor(kOrange+3);
-    themap["outfv"]->SetFillColor(kOrange+3);
+    themap["outfv"]->SetLineColor(kGreen+2);
+    themap["outfv"]->SetFillColor(kGreen+2);
     hs_trklen->Add(themap["outfv"]);
     themap["nc"]->SetLineColor(kGray);
     themap["nc"]->SetFillColor(kGray);
@@ -1257,75 +1324,6 @@ void DrawTHStack(THStack *hs_trklen,
   themap["total"]->SetFillStyle(3005);
   themap["total"]->Draw("E2 same");
 
-  /*
-  h_trklen_cosmic->Scale(pot_scaling);
-  h_trklen_cosmic_nostopmu->Scale(pot_scaling);
-  h_trklen_cosmic_stopmu->Scale(pot_scaling);
-  h_trklen_outfv->Scale(pot_scaling);
-  h_trklen_outfv_nostopmu->Scale(pot_scaling);
-  h_trklen_outfv_stopmu->Scale(pot_scaling);
-  h_trklen_nc->Scale(pot_scaling);
-  h_trklen_nc_proton->Scale(pot_scaling);
-  h_trklen_nc_pion->Scale(pot_scaling);
-  h_trklen_nc_other->Scale(pot_scaling);
-  h_trklen_anumu->Scale(pot_scaling);
-  h_trklen_nue->Scale(pot_scaling);
-  h_trklen_signal->Scale(pot_scaling);
-  h_trklen_total->Scale(pot_scaling);
-
-  
-  if (_breackdownPlots) {
-    h_trklen_cosmic_nostopmu->SetLineColor(kBlue+2);
-    h_trklen_cosmic_nostopmu->SetFillColor(kBlue+2);
-    hs_trklen->Add(h_trklen_cosmic_nostopmu);
-    h_trklen_cosmic_stopmu->SetLineColor(kBlue);
-    h_trklen_cosmic_stopmu->SetFillColor(kBlue);
-    hs_trklen->Add(h_trklen_cosmic_stopmu);
-    h_trklen_outfv_nostopmu->SetLineColor(kOrange+3);
-    h_trklen_outfv_nostopmu->SetFillColor(kOrange+3);
-    hs_trklen->Add(h_trklen_outfv_nostopmu);
-    h_trklen_outfv_stopmu->SetLineColor(kOrange+2);
-    h_trklen_outfv_stopmu->SetFillColor(kOrange+2);
-    hs_trklen->Add(h_trklen_outfv_stopmu);
-    h_trklen_nc_proton->SetLineColor(kGray+2);
-    h_trklen_nc_proton->SetFillColor(kGray+2);
-    hs_trklen->Add(h_trklen_nc_proton);
-    h_trklen_nc_pion->SetLineColor(kGray+1);
-    h_trklen_nc_pion->SetFillColor(kGray+1);
-    hs_trklen->Add(h_trklen_nc_pion);
-    h_trklen_nc_other->SetLineColor(kGray);
-    h_trklen_nc_other->SetFillColor(kGray);
-    hs_trklen->Add(h_trklen_nc_other);
-  }
-  else {
-    h_trklen_cosmic->SetLineColor(kBlue+2);
-    h_trklen_cosmic->SetFillColor(kBlue+2);
-    hs_trklen->Add(h_trklen_cosmic);
-    h_trklen_outfv->SetLineColor(kOrange+3);
-    h_trklen_outfv->SetFillColor(kOrange+3);
-    hs_trklen->Add(h_trklen_outfv);
-    h_trklen_nc->SetLineColor(kGray);
-    h_trklen_nc->SetFillColor(kGray);
-    hs_trklen->Add(h_trklen_nc);
-  }
-  h_trklen_anumu->SetLineColor(kOrange-3);
-  h_trklen_anumu->SetFillColor(kOrange-3);
-  hs_trklen->Add(h_trklen_anumu);
-  h_trklen_nue->SetLineColor(kGreen+3);
-  h_trklen_nue->SetFillColor(kGreen+3);
-  hs_trklen->Add(h_trklen_nue);
-  h_trklen_signal->SetLineColor(kRed);
-  h_trklen_signal->SetFillColor(kRed);
-  hs_trklen->Add(h_trklen_signal);
-  hs_trklen->Draw();
-  
-  //h_trklen_total->DrawCopy("hist");
-  
-  //gStyle->SetHatchesLineWidth(1);
-  h_trklen_total->SetFillColor(kBlack);
-  h_trklen_total->SetFillStyle(3005);
-  h_trklen_total->Draw("E2 same");
-  */
 }
 
 
