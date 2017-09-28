@@ -24,7 +24,7 @@
 //#include "PlotHandler.hpp"
 //#include "SelectionTools.hpp"
 
-const bool _breackdownPlots = true;
+const bool _breakdownPlots = true;
 
 const double _beamSpillStarts = 3.2; // us
 const double _beamSpillEnds   = 4.8; // us
@@ -81,10 +81,10 @@ void DrawPOT(double pot)
 //____________________________________________________________________________________________________
 void ActivateBranches(AnaTree *at) {
   
-  //at->fChain->SetBranchStatus("",1);
+  //t->fChain->SetBranchStatus("",1);
 }
 
-
+//____________________________________________________________________________________________________
 double CalcLength(const double& x_1, const double& y_1, const double& z_1, const double& x_2, const double& y_2, const double& z_2) {
   return sqrt(pow(x_1-x_2, 2) + pow(y_1-y_2, 2) + pow(z_1-z_2, 2));
 }
@@ -93,6 +93,9 @@ double CalcLength(const double& x_1, const double& y_1, const double& z_1, const
 void DrawTHStack(THStack *hs_trklen,
                    double pot_scaling,
                    std::map<std::string,TH1D*> themap);
+
+
+
 
 //____________________________________________________________________________________________________
 //____________________________________________________________________________________________________
@@ -114,11 +117,11 @@ int main(int argc, char* argv[]) {
   
   TApplication* rootapp = new TApplication("ROOT Application",&argc, argv);
   //gROOT->SetBatch(kTRUE);
-  gROOT->ProcessLine( "gErrorIgnoreLevel = 2001;"); // 1001: INFO, 2001: WARNINGS, 3001: ERRORS
+  gROOT->ProcessLine("gErrorIgnoreLevel = 2001;"); // 1001: INFO, 2001: WARNINGS, 3001: ERRORS
   gROOT->ProcessLine(".x rootlogon.C");
   
   std::cout << "Opening output file ubxsecana_output.root." << std::endl;
-  TFile *file_out = new TFile("ubxsecana_output.root","NEW");
+  TFile *file_out = new TFile("ubxsecana_output.root","RECREATE");
   if ( file_out->IsOpen() )
     std::cout << "File opened successfully" << std::endl;
   
@@ -170,11 +173,9 @@ int main(int argc, char* argv[]) {
   int evts = chain_ubxsec -> GetEntries();
   cout << "Number of events used is: " << evts << endl;
   
-  AnaTree * at = new AnaTree(chain_ubxsec);
-  ActivateBranches(at);
+  AnaTree * t = new AnaTree(chain_ubxsec);
+  ActivateBranches(t);
   
-  std::string TrackProdName  = "pandoraNu";
-  std::string VertexProdName = "pandoraNu";
   
   /*
    //Create a new file + a clone of old tree in new file
@@ -216,22 +217,6 @@ int main(int argc, char* argv[]) {
   TH1D* h_eff_den = new TH1D("h_eff_den", "h_eff_den", 6, 0, 4);
   TEfficiency* pEff = new TEfficiency("eff",";Neutrino Energy (truth) [GeV];Efficiency",6, 0, 4);
   
-  /*
-   TH1D* h_bkg_cosmic_sel = new TH1D("h_bkg_cosmic_sel", "h_bkg_cosmic_sel", 6, 0, 4);
-   TH1D* h_bkg_cosmic_all = new TH1D("h_bkg_cosmic_all", "h_bkg_cosmic_all", 6, 0, 4);
-   
-   TH1D* h_bkg_outfv_sel = new TH1D("h_bkg_outfv_sel", "h_bkg_outfv_sel", 6, 0, 4);
-   TH1D* h_bkg_outfv_all = new TH1D("h_bkg_outfv_all", "h_bkg_outfv_all", 6, 0, 4);
-   
-   TH1D* h_bkg_nc_sel = new TH1D("h_bkg_nc_sel", "h_bkg_nc_sel", 6, 0, 4);
-   TH1D* h_bkg_nc_all = new TH1D("h_bkg_nc_all", "h_bkg_nc_all", 6, 0, 4);
-   
-   TH1D* h_bkg_nue_sel = new TH1D("h_bkg_nue_sel", "h_bkg_nue_sel", 6, 0, 4);
-   TH1D* h_bkg_nue_all = new TH1D("h_bkg_nue_all", "h_bkg_nue_all", 6, 0, 4);
-   
-   TH1D* h_bkg_anumu_sel = new TH1D("h_bkg_anumu_sel", "h_bkg_anumu_sel", 6, 0, 4);
-   TH1D* h_bkg_anumu_all = new TH1D("h_bkg_anumu_all", "h_bkg_anumu_all", 6, 0, 4);
-   */
   
   
   TH1D* h_chi2 = new TH1D("h_chi2", "h_chi2", 50, 0, 50);
@@ -370,6 +355,12 @@ int main(int argc, char* argv[]) {
   hmap_multtracktol["signal_stopmu"] = new TH1D("h_multtracktol_signal_stopmu", "; Track Multiplicity (5 cm);", 10, 0, 10);
   hmap_multtracktol["signal_nostopmu"] = new TH1D("h_multtracktol_signal_nostopmu", "; Track Multiplicity (5 cm);", 10, 0, 10);
 
+  TH1D* h_pot = new TH1D("h_pot", "First bin contains number of POT (not valid on data)", 1, 0, 1);
+  TH1D* h_nevts = new TH1D("h_nevts", "First bin contains number of events", 1, 0, 1);
+
+  h_pot->SetBinContent(1, totalPOT);
+  h_nevts->SetBinContent(1, evts);
+
   
   int barWidth = 70;
   
@@ -393,29 +384,29 @@ int main(int argc, char* argv[]) {
     
     /*
      // Flashes
-     for (int fls = 0; fls < at->no_flashes; fls++) {
-     Sflashtime      ->Fill(at->flash_time[fls]);
-     Sflashpe        ->Fill(at->flash_pe[fls]);
-     Sflashycenter   ->Fill(at->flash_ycenter[fls]);
-     Sflashzcenter   ->Fill(at->flash_zcenter[fls]);
-     Sflashtimewidth ->Fill(at->flash_timewidth[fls]);
-     if (at->flash_pe[fls] > 50) {
-     Sflashtime50pe->Fill(at->flash_time[fls]);
+     for (int fls = 0; fls < t->no_flashes; fls++) {
+     Sflashtime      ->Fill(t->flash_time[fls]);
+     Sflashpe        ->Fill(t->flash_pe[fls]);
+     Sflashycenter   ->Fill(t->flash_ycenter[fls]);
+     Sflashzcenter   ->Fill(t->flash_zcenter[fls]);
+     Sflashtimewidth ->Fill(t->flash_timewidth[fls]);
+     if (t->flash_pe[fls] > 50) {
+     Sflashtime50pe->Fill(t->flash_time[fls]);
      int k = 0;
-     double distance = sqrt(pow(54.999*100-at->vx_flux[k],2)+pow(74.461*100-at->vy_flux[k],2)+pow(677.611*100-at->vz_flux[k],2));
-     Sfls_timeVSnu_distance->Fill(at->flash_time[fls],distance);
+     double distance = sqrt(pow(54.999*100-t->vx_flux[k],2)+pow(74.461*100-t->vy_flux[k],2)+pow(677.611*100-t->vz_flux[k],2));
+     Sfls_timeVSnu_distance->Fill(t->flash_time[fls],distance);
      }
-     Sfls_timeVSpe->Fill(at->flash_time[fls], at->flash_pe[fls]);
+     Sfls_timeVSpe->Fill(t->flash_time[fls], t->flash_pe[fls]);
      }
      bool doneForThisEvent = false;
      bool doneForThisEvent_cosmic = false;
-     for (int geantpar = 0; geantpar < at->geant_list_size; geantpar++) {
-     if (!doneForThisEvent && at->origin[geantpar] == 1 && at->process_primary[geantpar]==1) {
-     Sgeanttruetime_neutrino->Fill(at->StartT[geantpar]);
+     for (int geantpar = 0; geantpar < t->geant_list_size; geantpar++) {
+     if (!doneForThisEvent && t->origin[geantpar] == 1 && t->process_primary[geantpar]==1) {
+     Sgeanttruetime_neutrino->Fill(t->StartT[geantpar]);
      doneForThisEvent = true;
      }
-     if (!doneForThisEvent_cosmic &&at->origin[geantpar] == 2 && at->process_primary[geantpar]==1) {
-     Sgeanttruetime_cosmic->Fill(at->StartT[geantpar]);
+     if (!doneForThisEvent_cosmic &&t->origin[geantpar] == 2 && t->process_primary[geantpar]==1) {
+     Sgeanttruetime_cosmic->Fill(t->StartT[geantpar]);
      doneForThisEvent_cosmic = true;
      }
      }
@@ -423,16 +414,16 @@ int main(int argc, char* argv[]) {
     
     
     
-    if (at->nbeamfls == 0) continue;
+    if (t->nbeamfls == 0) continue;
     int flashInBeamSpill = -1;
     
     bool goodflash = false;
-    for (int fls = 0; fls < at->nbeamfls; fls ++){
-      h_flsTime->Fill(at->beamfls_time->at(fls));
-      if (at->beamfls_time->at(fls) > _beamSpillStarts && at->beamfls_time->at(fls) < _beamSpillEnds) {
+    for (int fls = 0; fls < t->nbeamfls; fls ++){
+      h_flsTime->Fill(t->beamfls_time->at(fls));
+      if (t->beamfls_time->at(fls) > _beamSpillStarts && t->beamfls_time->at(fls) < _beamSpillEnds) {
         
         flashInBeamSpill = fls;
-        if (at->beamfls_pe->at(fls) >= 50) {
+        if (t->beamfls_pe->at(fls) >= 50) {
           goodflash = true;
           nEvtsWFlashInBeamSpill++;
         }
@@ -447,86 +438,86 @@ int main(int argc, char* argv[]) {
     
     
     bool isSignal = false;
-    if (at->nupdg == 14 && at->ccnc == 0 && at->fv == 1){
+    if (t->nupdg == 14 && t->ccnc == 0 && t->fv == 1){
       nsignal++;
       isSignal = true;
-      h_eff_den->Fill(at->nu_e);
-      h_mueff_den->Fill(at->true_muon_mom);
+      h_eff_den->Fill(t->nu_e);
+      h_mueff_den->Fill(t->true_muon_mom);
       
-      if (at->muon_is_reco){
-        h_mumom_nue->Fill(at->nu_e, at->true_muon_mom);
+      if (t->muon_is_reco){
+        h_mumom_nue->Fill(t->nu_e, t->true_muon_mom);
         nSignalWMuonReco++;
-        h_mueff_num->Fill(at->true_muon_mom);
-        for (auto origin : *at->slc_origin){
+        h_mueff_num->Fill(t->true_muon_mom);
+        for (auto origin : *t->slc_origin){
           if (origin == 0 || origin == 2) {
-            h_mueff_2_num->Fill(at->true_muon_mom);
+            h_mueff_2_num->Fill(t->true_muon_mom);
             break;
           }
         }
-        if (at->vtx_resolution > -1 && at->vtx_resolution < 10) nSignalMuonRecoVtxOk++;
+        if (t->vtx_resolution > -1 && t->vtx_resolution < 10) nSignalMuonRecoVtxOk++;
         
-        h_muon_track_eff->Fill(at->muon_reco_eff);
-        h_muon_track_pur->Fill(at->muon_reco_pur);
+        h_muon_track_eff->Fill(t->muon_reco_eff);
+        h_muon_track_pur->Fill(t->muon_reco_pur);
         
-        h_mu_eff_mom->Fill(at->true_muon_mom, at->muon_reco_eff);
-        h_mu_pur_mom->Fill(at->true_muon_mom, at->muon_reco_pur);
+        h_mu_eff_mom->Fill(t->true_muon_mom, t->muon_reco_eff);
+        h_mu_pur_mom->Fill(t->true_muon_mom, t->muon_reco_pur);
       }
       else{
         //std::cout << "This is a signal event but the muon was not reconstructed. Event: " << event << std::endl;
       }
     }
-    if(at->nupdg == 14 && at->ccnc == 0){
+    if(t->nupdg == 14 && t->ccnc == 0){
       nNumuCC++;
     }
     
     
     bool isNueCC = false;
-    if (at->nupdg == 12 && at->ccnc == 0 && at->fv == 1) {
+    if (t->nupdg == 12 && t->ccnc == 0 && t->fv == 1) {
       isNueCC = true;
       nue_cc_fv++;
     }
-    //if (isSignal) std::cout << "IS SIGNAL - event " << at->event << std::endl;
+    //if (isSignal) std::cout << "IS SIGNAL - event " << t->event << std::endl;
     
     
-    if (isSignal) h_vtx_resolution->Fill(at->vtx_resolution);
+    if (isSignal) h_vtx_resolution->Fill(t->vtx_resolution);
     //if (isSignal && vtx_resolution > 200 && vtx_resolution < 210) std::cout << "vtx_resolution is fucked for event: " << event << std::endl;
     
     
     
     int n_acpt_tagged_per_event = 0;
-    for (int slc = 0; slc < at->nslices; slc ++) {
+    for (int slc = 0; slc < t->nslices; slc ++) {
       
-      if (at->slc_origin->at(slc) == 0 || at->slc_origin->at(slc) == 2) {
-        h_slice_npfp->Fill(at->slc_npfp->at(slc));
-        h_slice_ntrack->Fill(at->slc_ntrack->at(slc));
-        //if (at->slc_flsmatch_score->at(slc) < 0.0001) std::cout << ">>>> Neutrino has a low score (" << at->slc_flsmatch_score->at(slc) << "), event " << at->event << std::endl;
+      if (t->slc_origin->at(slc) == 0 || t->slc_origin->at(slc) == 2) {
+        h_slice_npfp->Fill(t->slc_npfp->at(slc));
+        h_slice_ntrack->Fill(t->slc_ntrack->at(slc));
+        //if (t->slc_flsmatch_score->at(slc) < 0.0001) std::cout << ">>>> Neutrino has a low score (" << t->slc_flsmatch_score->at(slc) << "), event " << t->event << std::endl;
       } else {
-        h_slice_npfp_others->Fill(at->slc_npfp->at(slc));
-        h_slice_ntrack_others->Fill(at->slc_ntrack->at(slc));
+        h_slice_npfp_others->Fill(t->slc_npfp->at(slc));
+        h_slice_ntrack_others->Fill(t->slc_ntrack->at(slc));
       }
       
       if (isSignal) {
-        if (at->slc_origin->at(slc) == 0 || at->slc_origin->at(slc) == 2) {
-          h_fm_score->Fill(at->slc_flsmatch_score->at(slc));
-          h_fm_score_pe->Fill(at->slc_flsmatch_score->at(slc), at->beamfls_pe->at(flashInBeamSpill));
+        if (t->slc_origin->at(slc) == 0 || t->slc_origin->at(slc) == 2) {
+          h_fm_score->Fill(t->slc_flsmatch_score->at(slc));
+          h_fm_score_pe->Fill(t->slc_flsmatch_score->at(slc), t->beamfls_pe->at(flashInBeamSpill));
         } else {
-          h_fm_score_others->Fill(at->slc_flsmatch_score->at(slc));
+          h_fm_score_others->Fill(t->slc_flsmatch_score->at(slc));
         }
         
       }
       
       
-      if (at->slc_origin->at(slc) == 0) h_slice_origin->Fill(2);
-      if (at->slc_origin->at(slc) == 1) h_slice_origin->Fill(0);
-      if (at->slc_origin->at(slc) == 2) h_slice_origin->Fill(1);
+      if (t->slc_origin->at(slc) == 0) h_slice_origin->Fill(2);
+      if (t->slc_origin->at(slc) == 1) h_slice_origin->Fill(0);
+      if (t->slc_origin->at(slc) == 2) h_slice_origin->Fill(1);
       
-      if (at->slc_acpt_outoftime->at(slc) == 1) n_acpt_tagged_per_event++;
+      if (t->slc_acpt_outoftime->at(slc) == 1) n_acpt_tagged_per_event++;
       
-      if ((at->slc_origin->at(slc) == 0 || at->slc_origin->at(slc) == 2) && at->fv == 1) {
+      if ((t->slc_origin->at(slc) == 0 || t->slc_origin->at(slc) == 2) && t->fv == 1) {
         n_slc_nu_origin ++;
-        if (at->slc_acpt_outoftime->at(slc) == 1) {
+        if (t->slc_acpt_outoftime->at(slc) == 1) {
           n_slc_acpt_tag_nu ++;
-          std::cout << "A neutrino was acpt tagged in event " << at->event << std::endl;
+          std::cout << "A neutrino was acpt tagged in event " << t->event << std::endl;
         }
       }
     }
@@ -549,92 +540,92 @@ int main(int argc, char* argv[]) {
     
     if (!goodflash) continue;
     
-    std::vector<bool> isBackground(at->nslices, false);
+    std::vector<bool> isBackground(t->nslices, false);
     
     // Slice loop
-    for (int slc = 0; slc < at->nslices; slc ++) {
+    for (int slc = 0; slc < t->nslices; slc ++) {
       
-      bool nu_origin = (at->slc_origin->at(slc) == 0 || at->slc_origin->at(slc) == 2);
+      bool nu_origin = (t->slc_origin->at(slc) == 0 || t->slc_origin->at(slc) == 2);
       
       // PMTs
       //   nu
-      if ( isSignal && (at->slc_origin->at(slc) == 0 || at->slc_origin->at(slc) == 2) && flashInBeamSpill > -1 && at->slc_flsmatch_score->at(slc) > -1){
+      if ( isSignal && (t->slc_origin->at(slc) == 0 || t->slc_origin->at(slc) == 2) && flashInBeamSpill > -1 && t->slc_flsmatch_score->at(slc) > -1){
         for (int pmt = 0; pmt < 32; pmt++) {
-          if ((at->slc_flshypo_spec->at(slc))[pmt] < 5 || (at->beamfls_spec->at(flashInBeamSpill))[pmt] < 5) continue;
-          double mean = ((at->slc_flshypo_spec->at(slc))[pmt] + (at->beamfls_spec->at(flashInBeamSpill))[pmt]) / 2.;
-          h_frac_diff->Fill(pmt, ( (at->slc_flshypo_spec->at(slc))[pmt] - (at->beamfls_spec->at(flashInBeamSpill))[pmt] ) / (mean) );
+          if ((t->slc_flshypo_spec->at(slc))[pmt] < 5 || (t->beamfls_spec->at(flashInBeamSpill))[pmt] < 5) continue;
+          double mean = ((t->slc_flshypo_spec->at(slc))[pmt] + (t->beamfls_spec->at(flashInBeamSpill))[pmt]) / 2.;
+          h_frac_diff->Fill(pmt, ( (t->slc_flshypo_spec->at(slc))[pmt] - (t->beamfls_spec->at(flashInBeamSpill))[pmt] ) / (mean) );
         }
-        if (at->slc_flsmatch_qllx->at(slc)!= -9999 && at->slc_flsmatch_tpcx->at(slc)!=-9999){
-          h_xdiff->Fill(at->slc_flsmatch_qllx->at(slc) - at->slc_flsmatch_tpcx->at(slc));
-          h_zdiff->Fill(at->slc_flsmatch_hypoz->at(slc) - at->beamfls_z->at(flashInBeamSpill));
+        if (t->slc_flsmatch_qllx->at(slc)!= -9999 && t->slc_flsmatch_tpcx->at(slc)!=-9999){
+          h_xdiff->Fill(t->slc_flsmatch_qllx->at(slc) - t->slc_flsmatch_tpcx->at(slc));
+          h_zdiff->Fill(t->slc_flsmatch_hypoz->at(slc) - t->beamfls_z->at(flashInBeamSpill));
         }
       }
       //   others
-      if (at->slc_origin->at(slc) == 1 && flashInBeamSpill > -1 && at->slc_flsmatch_score->at(slc) > -1){
+      if (t->slc_origin->at(slc) == 1 && flashInBeamSpill > -1 && t->slc_flsmatch_score->at(slc) > -1){
         for (int pmt = 0; pmt < 32; pmt++) {
-          if ((at->slc_flshypo_spec->at(slc))[pmt] < 5 || (at->beamfls_spec->at(flashInBeamSpill))[pmt] < 5) continue;
-          double mean = ((at->slc_flshypo_spec->at(slc))[pmt] + (at->beamfls_spec->at(flashInBeamSpill))[pmt]) / 2.;
-          h_frac_diff_others->Fill(pmt, ( (at->slc_flshypo_spec->at(slc))[pmt] - (at->beamfls_spec->at(flashInBeamSpill))[pmt] ) / (mean) );
+          if ((t->slc_flshypo_spec->at(slc))[pmt] < 5 || (t->beamfls_spec->at(flashInBeamSpill))[pmt] < 5) continue;
+          double mean = ((t->slc_flshypo_spec->at(slc))[pmt] + (t->beamfls_spec->at(flashInBeamSpill))[pmt]) / 2.;
+          h_frac_diff_others->Fill(pmt, ( (t->slc_flshypo_spec->at(slc))[pmt] - (t->beamfls_spec->at(flashInBeamSpill))[pmt] ) / (mean) );
         }
-        if (at->slc_flsmatch_qllx->at(slc)!= -9999 && at->slc_flsmatch_tpcx->at(slc)!=-9999){
-          h_xdiff_others->Fill(at->slc_flsmatch_qllx->at(slc) - at->slc_flsmatch_tpcx->at(slc));
-          h_zdiff_others->Fill(at->slc_flsmatch_hypoz->at(slc) - at->beamfls_z->at(flashInBeamSpill));
+        if (t->slc_flsmatch_qllx->at(slc)!= -9999 && t->slc_flsmatch_tpcx->at(slc)!=-9999){
+          h_xdiff_others->Fill(t->slc_flsmatch_qllx->at(slc) - t->slc_flsmatch_tpcx->at(slc));
+          h_zdiff_others->Fill(t->slc_flsmatch_hypoz->at(slc) - t->beamfls_z->at(flashInBeamSpill));
         }
       }
       //  spec
-      if (at->event == -1/*150801*/) {
-        if (flashInBeamSpill > -1 && at->slc_flsmatch_score->at(slc) > -1){
+      if (t->event == -1/*150801*/) {
+        if (flashInBeamSpill > -1 && t->slc_flsmatch_score->at(slc) > -1){
           for (int pmt = 0; pmt < 32; pmt++) {
-            std::cout << "tpcx " << at->slc_flsmatch_tpcx->at(0) << std::endl;
-            std::cout << "qllx " << at->slc_flsmatch_qllx->at(0) << std::endl;
+            std::cout << "tpcx " << t->slc_flsmatch_tpcx->at(0) << std::endl;
+            std::cout << "qllx " << t->slc_flsmatch_qllx->at(0) << std::endl;
             hypo_spec_x[pmt] = pmt;
-            hypo_spec_y[pmt] = (at->slc_flshypo_spec->at(0))[pmt]; ;//(at->slc_flshypo_spec->at(3))[pmt];
-            std::cout << "SCORE IS " << at->slc_flsmatch_score->at(0) << std::endl;
+            hypo_spec_y[pmt] = (t->slc_flshypo_spec->at(0))[pmt]; ;//(t->slc_flshypo_spec->at(3))[pmt];
+            std::cout << "SCORE IS " << t->slc_flsmatch_score->at(0) << std::endl;
             meas_spec_x[pmt] = pmt;
-            meas_spec_y[pmt] = (at->beamfls_spec->at(flashInBeamSpill))[pmt];
+            meas_spec_y[pmt] = (t->beamfls_spec->at(flashInBeamSpill))[pmt];
             numc_spec_x[pmt] = pmt;
-            //numc_spec_y[pmt] = at->numc_flash_spec->at(pmt);
+            //numc_spec_y[pmt] = t->numc_flash_spec->at(pmt);
           }
         }
       }
       
       /* CheckVertex
-       if (nu_origin && at->fv == 1 && at->ccnc == 0) {
-       if (at->vtx_resolution <= 10.){
-       h_vtxcheck_angle_good->Fill(at->slc_vtxcheck_angle->at(slc));
-       //if (at->slc_vtxcheck_angle->at(slc) > 3)
-       //std::cout << "Angle is about 180 for a good vertex for event: " << at->event << std::endl;
+       if (nu_origin && t->fv == 1 && t->ccnc == 0) {
+       if (t->vtx_resolution <= 10.){
+       h_vtxcheck_angle_good->Fill(t->slc_vtxcheck_angle->at(slc));
+       //if (t->slc_vtxcheck_angle->at(slc) > 3)
+       //std::cout << "Angle is about 180 for a good vertex for event: " << t->event << std::endl;
        }
-       if (at->vtx_resolution > 10.){
-       h_vtxcheck_angle_bad->Fill(at->slc_vtxcheck_angle->at(slc));
-       //if (at->slc_vtxcheck_angle->at(slc) < 2)
-       //std::cout << "Angle is not 180 for a bad vertex for event: " << at->event << std::endl;
+       if (t->vtx_resolution > 10.){
+       h_vtxcheck_angle_bad->Fill(t->slc_vtxcheck_angle->at(slc));
+       //if (t->slc_vtxcheck_angle->at(slc) < 2)
+       //std::cout << "Angle is not 180 for a bad vertex for event: " << t->event << std::endl;
        }
        }*/
       // CheckVertex
       if (isSignal && nu_origin) {
-        h_vtxcheck_angle_good->Fill(at->slc_vtxcheck_angle->at(slc));
+        h_vtxcheck_angle_good->Fill(t->slc_vtxcheck_angle->at(slc));
       } else {
-        h_vtxcheck_angle_bad->Fill(at->slc_vtxcheck_angle->at(slc));
+        h_vtxcheck_angle_bad->Fill(t->slc_vtxcheck_angle->at(slc));
       }
       
       
-      h_chi2->Fill(at->slc_kalman_chi2->at(slc)/(double)at->slc_kalman_ndof->at(slc));
-      //if (at->slc_kalman_chi2->at(slc)/(double)at->slc_kalman_ndof->at(slc) > 15)
+      h_chi2->Fill(t->slc_kalman_chi2->at(slc)/(double)t->slc_kalman_ndof->at(slc));
+      //if (t->slc_kalman_chi2->at(slc)/(double)t->slc_kalman_ndof->at(slc) > 15)
       //std::cout << "This event (" << event << ") has a track with chi2/ndof = " << slc_kalman_chi2->at(slc)/(double)slc_kalman_ndof->at(slc) << std::endl;
-      h_nslices->Fill(at->nslices);
+      h_nslices->Fill(t->nslices);
       
       isBackground.at(slc) = false;
       
       
       // ACPT
-      if (at->slc_acpt_outoftime->at(slc) == 1) {
+      if (t->slc_acpt_outoftime->at(slc) == 1) {
         //isBackground.at(slc) = true;
         //continue;
       }
       
       // n slices
-      if (at->nslices > 9) {
+      if (t->nslices > 9) {
         //isBackground.at(slc) = true;
         //continue;
       }
@@ -665,20 +656,20 @@ int main(int argc, char* argv[]) {
     // Find slice with maximum score that was not tagged as bkg
     double score_max = -1;
     int scl_ll_max = -1;
-    for (int slc = 0; slc < at->nslices; slc ++){
+    for (int slc = 0; slc < t->nslices; slc ++){
       
-      if (at->slc_flsmatch_score->at(slc) > 0.00000001) {
+      if (t->slc_flsmatch_score->at(slc) > 0.00000001) {
         n_slc_flsmatch++;
       }
       
       //if (isBackground.at(slc)) continue;
-      //if (at->slc_flsmatch_qllx->at(slc) - at->slc_flsmatch_tpcx->at(slc) > 20) continue;
-      //if(at->slc_flsmatch_hypoz->at(slc) - at->beamfls_z->at(flashInBeamSpill) > 100) continue;
-      //if(!at->slc_iscontained->at(slc)) continue;
+      //if (t->slc_flsmatch_qllx->at(slc) - t->slc_flsmatch_tpcx->at(slc) > 20) continue;
+      //if(t->slc_flsmatch_hypoz->at(slc) - t->beamfls_z->at(flashInBeamSpill) > 100) continue;
+      //if(!t->slc_iscontained->at(slc)) continue;
       
-      if(at->slc_flsmatch_score->at(slc) > score_max){
+      if(t->slc_flsmatch_score->at(slc) > score_max){
         scl_ll_max = slc;
-        score_max = at->slc_flsmatch_score->at(slc);
+        score_max = t->slc_flsmatch_score->at(slc);
       }
     }
     
@@ -691,194 +682,194 @@ int main(int argc, char* argv[]) {
     if (score_max <= 0.00000001) continue;
     //if (score_max <= 0.001) continue;
     //std::cout << "passed score" << std::endl;
-    if(at->slc_flsmatch_qllx->at(scl_ll_max) - at->slc_flsmatch_tpcx->at(scl_ll_max) > 20) continue;
+    if(t->slc_flsmatch_qllx->at(scl_ll_max) - t->slc_flsmatch_tpcx->at(scl_ll_max) > 20) continue;
     //std::cout << "passed x diff" << std::endl;
-    //if(at->slc_flsmatch_qllx->at(scl_ll_max) - at->slc_flsmatch_tpcx->at(scl_ll_max) < -80) continue;
-    if(at->slc_flsmatch_hypoz->at(scl_ll_max) - at->beamfls_z->at(flashInBeamSpill) > 100) continue;
+    //if(t->slc_flsmatch_qllx->at(scl_ll_max) - t->slc_flsmatch_tpcx->at(scl_ll_max) < -80) continue;
+    if(t->slc_flsmatch_hypoz->at(scl_ll_max) - t->beamfls_z->at(flashInBeamSpill) > 100) continue;
     //std::cout << "passed z diff" << std::endl;
     
-    if (isSignal && (at->slc_origin->at(scl_ll_max)==0 || at->slc_origin->at(scl_ll_max)==2)) nSignalFlashMatched ++;
+    if (isSignal && (t->slc_origin->at(scl_ll_max)==0 || t->slc_origin->at(scl_ll_max)==2)) nSignalFlashMatched ++;
     
     //if(isBackground.at(scl_ll_max)) continue;
     
-    if(at->slc_nuvtx_fv->at(scl_ll_max) == 0) continue;
+    if(t->slc_nuvtx_fv->at(scl_ll_max) == 0) continue;
     //std::cout << "passed fv" << std::endl;
     
-    if(at->slc_vtxcheck_angle->at(scl_ll_max) > 2.9) continue;
+    if(t->slc_vtxcheck_angle->at(scl_ll_max) > 2.9) continue;
     
-    if(at->slc_vtxcheck_angle->at(scl_ll_max) < 0.05 && at->slc_vtxcheck_angle->at(scl_ll_max) !=-9999 ) continue;
+    if(t->slc_vtxcheck_angle->at(scl_ll_max) < 0.05 && t->slc_vtxcheck_angle->at(scl_ll_max) !=-9999 ) continue;
     
-    if(at->slc_ntrack->at(scl_ll_max) == 0) continue;
+    if(t->slc_ntrack->at(scl_ll_max) == 0) continue;
     
-    if(!at->slc_passed_min_track_quality->at(scl_ll_max)) continue;
+    if(!t->slc_passed_min_track_quality->at(scl_ll_max)) continue;
     
-    if(!at->slc_passed_min_vertex_quality->at(scl_ll_max)) continue;
+    if(!t->slc_passed_min_vertex_quality->at(scl_ll_max)) continue;
     
-    //if(at->slc_ntrack->at(scl_ll_max) == 1 && at->slc_crosses_top_boundary->at(scl_ll_max) == 1) continue;
+    //if(t->slc_ntrack->at(scl_ll_max) == 1 && t->slc_crosses_top_boundary->at(scl_ll_max) == 1) continue;
     
-    //if(at->slc_longesttrack_length->at(scl_ll_max) < 25.) continue;
+    //if(t->slc_longesttrack_length->at(scl_ll_max) < 25.) continue;
     
-    //if(!at->slc_iscontained->at(scl_ll_max)) continue;
+    //if(!t->slc_iscontained->at(scl_ll_max)) continue;
     
-    //if(at->slc_crosses_top_boundary->at(scl_ll_max) == 1) continue;
+    //if(t->slc_crosses_top_boundary->at(scl_ll_max) == 1) continue;
     
     
     
     // Event is selected
     
-    hmap_trklen["total"]->Fill(at->slc_longesttrack_length->at(scl_ll_max));
-    hmap_trkphi["total"]->Fill(at->slc_longesttrack_phi->at(scl_ll_max));
-    hmap_trktheta["total"]->Fill(at->slc_longesttrack_theta->at(scl_ll_max));
-    hmap_multpfp["total"]->Fill(at->slc_mult_pfp->at(scl_ll_max));
-    hmap_multtracktol["total"]->Fill(at->slc_mult_track_tolerance->at(scl_ll_max));
+    hmap_trklen["total"]->Fill(t->slc_longesttrack_length->at(scl_ll_max));
+    hmap_trkphi["total"]->Fill(t->slc_longesttrack_phi->at(scl_ll_max));
+    hmap_trktheta["total"]->Fill(t->slc_longesttrack_theta->at(scl_ll_max));
+    hmap_multpfp["total"]->Fill(t->slc_mult_pfp->at(scl_ll_max));
+    hmap_multtracktol["total"]->Fill(t->slc_mult_track_tolerance->at(scl_ll_max));
     
     bool nu_origin = false;
-    if ((at->slc_origin->at(scl_ll_max) == 0 || at->slc_origin->at(scl_ll_max) == 2)) nu_origin = true;
+    if ((t->slc_origin->at(scl_ll_max) == 0 || t->slc_origin->at(scl_ll_max) == 2)) nu_origin = true;
     
     if (isNueCC) {
       nue_cc_selected_total++;
     }
     
     // Signal
-    if(nu_origin && at->ccnc==0 && at->nupdg==14 && at->fv==1){
+    if(nu_origin && t->ccnc==0 && t->nupdg==14 && t->fv==1){
       signal_sel ++;
-      h_eff_num->Fill(at->nu_e);
-      pEff->Fill(true, at->nu_e);
-      hmap_trklen["signal"]->Fill(at->slc_longesttrack_length->at(scl_ll_max));
-      hmap_trkphi["signal"]->Fill(at->slc_longesttrack_phi->at(scl_ll_max));
-      hmap_trktheta["signal"]->Fill(at->slc_longesttrack_theta->at(scl_ll_max));
-      hmap_multpfp["signal"]->Fill(at->slc_mult_pfp->at(scl_ll_max));
-      hmap_multtracktol["signal"]->Fill(at->slc_mult_track_tolerance->at(scl_ll_max));
-      //std::cout << "Is signal and is selected. event: " << at->event << std::endl;
-      //if (at->slc_mult_track_tolerance->at(scl_ll_max) == 0) std::cout << "Is signal with mult_track_tolerance=0. event: " << at->event << std::endl;
-      if (at->slc_origin_extra->at(scl_ll_max) == 0) {
-        hmap_trklen["signal_stopmu"]->Fill(at->slc_longesttrack_length->at(scl_ll_max));
-        hmap_trkphi["signal_stopmu"]->Fill(at->slc_longesttrack_phi->at(scl_ll_max));
-        hmap_trktheta["signal_stopmu"]->Fill(at->slc_longesttrack_theta->at(scl_ll_max));
-        hmap_multpfp["signal_stopmu"]->Fill(at->slc_mult_pfp->at(scl_ll_max));
-        hmap_multtracktol["signal_stopmu"]->Fill(at->slc_mult_track_tolerance->at(scl_ll_max));
+      h_eff_num->Fill(t->nu_e);
+      pEff->Fill(true, t->nu_e);
+      hmap_trklen["signal"]->Fill(t->slc_longesttrack_length->at(scl_ll_max));
+      hmap_trkphi["signal"]->Fill(t->slc_longesttrack_phi->at(scl_ll_max));
+      hmap_trktheta["signal"]->Fill(t->slc_longesttrack_theta->at(scl_ll_max));
+      hmap_multpfp["signal"]->Fill(t->slc_mult_pfp->at(scl_ll_max));
+      hmap_multtracktol["signal"]->Fill(t->slc_mult_track_tolerance->at(scl_ll_max));
+      //std::cout << "Is signal and is selected. event: " << t->event << std::endl;
+      //if (t->slc_mult_track_tolerance->at(scl_ll_max) == 0) std::cout << "Is signal with mult_track_tolerance=0. event: " << t->event << std::endl;
+      if (t->slc_origin_extra->at(scl_ll_max) == 0) {
+        hmap_trklen["signal_stopmu"]->Fill(t->slc_longesttrack_length->at(scl_ll_max));
+        hmap_trkphi["signal_stopmu"]->Fill(t->slc_longesttrack_phi->at(scl_ll_max));
+        hmap_trktheta["signal_stopmu"]->Fill(t->slc_longesttrack_theta->at(scl_ll_max));
+        hmap_multpfp["signal_stopmu"]->Fill(t->slc_mult_pfp->at(scl_ll_max));
+        hmap_multtracktol["signal_stopmu"]->Fill(t->slc_mult_track_tolerance->at(scl_ll_max));
 
       } else {
-        hmap_trklen["signal_nostopmu"]->Fill(at->slc_longesttrack_length->at(scl_ll_max));
-        hmap_trkphi["signal_nostopmu"]->Fill(at->slc_longesttrack_phi->at(scl_ll_max));
-        hmap_trktheta["signal_nostopmu"]->Fill(at->slc_longesttrack_theta->at(scl_ll_max));
-        hmap_multpfp["signal_nostopmu"]->Fill(at->slc_mult_pfp->at(scl_ll_max));
-        hmap_multtracktol["signal_nostopmu"]->Fill(at->slc_mult_track_tolerance->at(scl_ll_max));
+        hmap_trklen["signal_nostopmu"]->Fill(t->slc_longesttrack_length->at(scl_ll_max));
+        hmap_trkphi["signal_nostopmu"]->Fill(t->slc_longesttrack_phi->at(scl_ll_max));
+        hmap_trktheta["signal_nostopmu"]->Fill(t->slc_longesttrack_theta->at(scl_ll_max));
+        hmap_multpfp["signal_nostopmu"]->Fill(t->slc_mult_pfp->at(scl_ll_max));
+        hmap_multtracktol["signal_nostopmu"]->Fill(t->slc_mult_track_tolerance->at(scl_ll_max));
       }
     }
     // anumu
-    else if(nu_origin && at->ccnc==0 && at->nupdg==-14 && at->fv==1){
+    else if(nu_origin && t->ccnc==0 && t->nupdg==-14 && t->fv==1){
       bkg_anumu_sel ++;
-      pEff->Fill(false, at->nu_e);
-      hmap_trklen["anumu"]->Fill(at->slc_longesttrack_length->at(scl_ll_max));
-      hmap_trkphi["anumu"]->Fill(at->slc_longesttrack_phi->at(scl_ll_max));
-      hmap_trktheta["anumu"]->Fill(at->slc_longesttrack_theta->at(scl_ll_max));
-      hmap_multpfp["anumu"]->Fill(at->slc_mult_pfp->at(scl_ll_max));
-      hmap_multtracktol["anumu"]->Fill(at->slc_mult_track_tolerance->at(scl_ll_max));
+      pEff->Fill(false, t->nu_e);
+      hmap_trklen["anumu"]->Fill(t->slc_longesttrack_length->at(scl_ll_max));
+      hmap_trkphi["anumu"]->Fill(t->slc_longesttrack_phi->at(scl_ll_max));
+      hmap_trktheta["anumu"]->Fill(t->slc_longesttrack_theta->at(scl_ll_max));
+      hmap_multpfp["anumu"]->Fill(t->slc_mult_pfp->at(scl_ll_max));
+      hmap_multtracktol["anumu"]->Fill(t->slc_mult_track_tolerance->at(scl_ll_max));
     }
     // nue
-    else if(nu_origin && at->ccnc==0 && (at->nupdg==-12 || at->nupdg==12) && at->fv==1){
+    else if(nu_origin && t->ccnc==0 && (t->nupdg==-12 || t->nupdg==12) && t->fv==1){
       bkg_nue_sel ++;
-      pEff->Fill(false, at->nu_e);
-      hmap_trklen["nue"]->Fill(at->slc_longesttrack_length->at(scl_ll_max));
-      hmap_trkphi["nue"]->Fill(at->slc_longesttrack_phi->at(scl_ll_max));
-      hmap_trktheta["nue"]->Fill(at->slc_longesttrack_theta->at(scl_ll_max));
-      hmap_multpfp["nue"]->Fill(at->slc_mult_pfp->at(scl_ll_max));
-      hmap_multtracktol["nue"]->Fill(at->slc_mult_track_tolerance->at(scl_ll_max));
-      if (at->nupdg == 12)
+      pEff->Fill(false, t->nu_e);
+      hmap_trklen["nue"]->Fill(t->slc_longesttrack_length->at(scl_ll_max));
+      hmap_trkphi["nue"]->Fill(t->slc_longesttrack_phi->at(scl_ll_max));
+      hmap_trktheta["nue"]->Fill(t->slc_longesttrack_theta->at(scl_ll_max));
+      hmap_multpfp["nue"]->Fill(t->slc_mult_pfp->at(scl_ll_max));
+      hmap_multtracktol["nue"]->Fill(t->slc_mult_track_tolerance->at(scl_ll_max));
+      if (t->nupdg == 12)
         nue_cc_selected++;
     }
     // nc
-    else if(nu_origin && at->ccnc==1 && at->fv==1){
-      //std::cout << "origin extra is: " << at->slc_origin_extra->at(scl_ll_max) << std::endl;
+    else if(nu_origin && t->ccnc==1 && t->fv==1){
+      //std::cout << "origin extra is: " << t->slc_origin_extra->at(scl_ll_max) << std::endl;
       bkg_nc_sel ++;
-      pEff->Fill(false, at->nu_e);
-      hmap_trklen["nc"]->Fill(at->slc_longesttrack_length->at(scl_ll_max));
-      hmap_trkphi["nc"]->Fill(at->slc_longesttrack_phi->at(scl_ll_max));
-      hmap_trktheta["nc"]->Fill(at->slc_longesttrack_theta->at(scl_ll_max));
-      hmap_multpfp["nc"]->Fill(at->slc_mult_pfp->at(scl_ll_max));
-      hmap_multtracktol["nc"]->Fill(at->slc_mult_track_tolerance->at(scl_ll_max));
+      pEff->Fill(false, t->nu_e);
+      hmap_trklen["nc"]->Fill(t->slc_longesttrack_length->at(scl_ll_max));
+      hmap_trkphi["nc"]->Fill(t->slc_longesttrack_phi->at(scl_ll_max));
+      hmap_trktheta["nc"]->Fill(t->slc_longesttrack_theta->at(scl_ll_max));
+      hmap_multpfp["nc"]->Fill(t->slc_mult_pfp->at(scl_ll_max));
+      hmap_multtracktol["nc"]->Fill(t->slc_mult_track_tolerance->at(scl_ll_max));
       // proton
-      if (at->slc_origin_extra->at(scl_ll_max) == 3) {
-        hmap_trklen["nc_proton"]->Fill(at->slc_longesttrack_length->at(scl_ll_max));
-        hmap_trkphi["nc_proton"]->Fill(at->slc_longesttrack_phi->at(scl_ll_max));
-        hmap_trktheta["nc_proton"]->Fill(at->slc_longesttrack_theta->at(scl_ll_max));
-        hmap_multpfp["nc_proton"]->Fill(at->slc_mult_pfp->at(scl_ll_max));
-        hmap_multtracktol["nc_proton"]->Fill(at->slc_mult_track_tolerance->at(scl_ll_max));
-        //if (at->slc_longesttrack_length->at(scl_ll_max) > 75.)
-         // std::cout << ">>>>>>>>> event " << at->event << std::endl;
+      if (t->slc_origin_extra->at(scl_ll_max) == 3) {
+        hmap_trklen["nc_proton"]->Fill(t->slc_longesttrack_length->at(scl_ll_max));
+        hmap_trkphi["nc_proton"]->Fill(t->slc_longesttrack_phi->at(scl_ll_max));
+        hmap_trktheta["nc_proton"]->Fill(t->slc_longesttrack_theta->at(scl_ll_max));
+        hmap_multpfp["nc_proton"]->Fill(t->slc_mult_pfp->at(scl_ll_max));
+        hmap_multtracktol["nc_proton"]->Fill(t->slc_mult_track_tolerance->at(scl_ll_max));
+        //if (t->slc_longesttrack_length->at(scl_ll_max) > 75.)
+         // std::cout << ">>>>>>>>> event " << t->event << std::endl;
       }
       //pion
-      else if (at->slc_origin_extra->at(scl_ll_max) == 2) {
-        hmap_trklen["nc_pion"]->Fill(at->slc_longesttrack_length->at(scl_ll_max));
-        hmap_trkphi["nc_pion"]->Fill(at->slc_longesttrack_phi->at(scl_ll_max));
-        hmap_trktheta["nc_pion"]->Fill(at->slc_longesttrack_theta->at(scl_ll_max));
-        hmap_multpfp["nc_pion"]->Fill(at->slc_mult_pfp->at(scl_ll_max));
-        hmap_multtracktol["nc_pion"]->Fill(at->slc_mult_track_tolerance->at(scl_ll_max));
+      else if (t->slc_origin_extra->at(scl_ll_max) == 2) {
+        hmap_trklen["nc_pion"]->Fill(t->slc_longesttrack_length->at(scl_ll_max));
+        hmap_trkphi["nc_pion"]->Fill(t->slc_longesttrack_phi->at(scl_ll_max));
+        hmap_trktheta["nc_pion"]->Fill(t->slc_longesttrack_theta->at(scl_ll_max));
+        hmap_multpfp["nc_pion"]->Fill(t->slc_mult_pfp->at(scl_ll_max));
+        hmap_multtracktol["nc_pion"]->Fill(t->slc_mult_track_tolerance->at(scl_ll_max));
       }
       // other
       else {
-        //std::cout << "Is NC Other, event: " << at->event << std::endl;
-        hmap_trklen["nc_other"]->Fill(at->slc_longesttrack_length->at(scl_ll_max));
-        hmap_trkphi["nc_other"]->Fill(at->slc_longesttrack_phi->at(scl_ll_max));
-        hmap_trktheta["nc_other"]->Fill(at->slc_longesttrack_theta->at(scl_ll_max));
-        hmap_multpfp["nc_other"]->Fill(at->slc_mult_pfp->at(scl_ll_max));
-        hmap_multtracktol["nc_other"]->Fill(at->slc_mult_track_tolerance->at(scl_ll_max));
+        //std::cout << "Is NC Other, event: " << t->event << std::endl;
+        hmap_trklen["nc_other"]->Fill(t->slc_longesttrack_length->at(scl_ll_max));
+        hmap_trkphi["nc_other"]->Fill(t->slc_longesttrack_phi->at(scl_ll_max));
+        hmap_trktheta["nc_other"]->Fill(t->slc_longesttrack_theta->at(scl_ll_max));
+        hmap_multpfp["nc_other"]->Fill(t->slc_mult_pfp->at(scl_ll_max));
+        hmap_multtracktol["nc_other"]->Fill(t->slc_mult_track_tolerance->at(scl_ll_max));
       }
-      //std::cout << "Is a nc but is selected. event: " << at->event << std::endl;
+      //std::cout << "Is a nc but is selected. event: " << t->event << std::endl;
     }
     // outfv
-    else if(nu_origin && at->fv==0){
-      //std::cout << "origin extra is: " << at->slc_origin_extra->at(scl_ll_max) << std::endl;
+    else if(nu_origin && t->fv==0){
+      //std::cout << "origin extra is: " << t->slc_origin_extra->at(scl_ll_max) << std::endl;
       bkg_outfv_sel ++;
       //std::cout << "Is OutFV. event: " << event << std::endl;
-      pEff->Fill(false, at->nu_e);
-      hmap_trklen["outfv"]->Fill(at->slc_longesttrack_length->at(scl_ll_max));
-      hmap_trkphi["outfv"]->Fill(at->slc_longesttrack_phi->at(scl_ll_max));
-      hmap_trktheta["outfv"]->Fill(at->slc_longesttrack_theta->at(scl_ll_max));
-      hmap_multpfp["outfv"]->Fill(at->slc_mult_pfp->at(scl_ll_max));
-      hmap_multtracktol["outfv"]->Fill(at->slc_mult_track_tolerance->at(scl_ll_max));
+      pEff->Fill(false, t->nu_e);
+      hmap_trklen["outfv"]->Fill(t->slc_longesttrack_length->at(scl_ll_max));
+      hmap_trkphi["outfv"]->Fill(t->slc_longesttrack_phi->at(scl_ll_max));
+      hmap_trktheta["outfv"]->Fill(t->slc_longesttrack_theta->at(scl_ll_max));
+      hmap_multpfp["outfv"]->Fill(t->slc_mult_pfp->at(scl_ll_max));
+      hmap_multtracktol["outfv"]->Fill(t->slc_mult_track_tolerance->at(scl_ll_max));
       
-      if (at->slc_origin_extra->at(scl_ll_max) == 0) {
-        hmap_trklen["outfv_stopmu"]->Fill(at->slc_longesttrack_length->at(scl_ll_max));
-        hmap_trkphi["outfv_stopmu"]->Fill(at->slc_longesttrack_phi->at(scl_ll_max));
-        hmap_trktheta["outfv_stopmu"]->Fill(at->slc_longesttrack_theta->at(scl_ll_max));
-        hmap_multpfp["outfv_stopmu"]->Fill(at->slc_mult_pfp->at(scl_ll_max));
-        hmap_multtracktol["outfv_stopmu"]->Fill(at->slc_mult_track_tolerance->at(scl_ll_max));
+      if (t->slc_origin_extra->at(scl_ll_max) == 0) {
+        hmap_trklen["outfv_stopmu"]->Fill(t->slc_longesttrack_length->at(scl_ll_max));
+        hmap_trkphi["outfv_stopmu"]->Fill(t->slc_longesttrack_phi->at(scl_ll_max));
+        hmap_trktheta["outfv_stopmu"]->Fill(t->slc_longesttrack_theta->at(scl_ll_max));
+        hmap_multpfp["outfv_stopmu"]->Fill(t->slc_mult_pfp->at(scl_ll_max));
+        hmap_multtracktol["outfv_stopmu"]->Fill(t->slc_mult_track_tolerance->at(scl_ll_max));
       } else {
-        hmap_trklen["outfv_nostopmu"]->Fill(at->slc_longesttrack_length->at(scl_ll_max));
-        hmap_trkphi["outfv_nostopmu"]->Fill(at->slc_longesttrack_phi->at(scl_ll_max));
-        hmap_trktheta["outfv_nostopmu"]->Fill(at->slc_longesttrack_theta->at(scl_ll_max));
-        hmap_multpfp["outfv_nostopmu"]->Fill(at->slc_mult_pfp->at(scl_ll_max));
-        hmap_multtracktol["outfv_nostopmu"]->Fill(at->slc_mult_track_tolerance->at(scl_ll_max));
+        hmap_trklen["outfv_nostopmu"]->Fill(t->slc_longesttrack_length->at(scl_ll_max));
+        hmap_trkphi["outfv_nostopmu"]->Fill(t->slc_longesttrack_phi->at(scl_ll_max));
+        hmap_trktheta["outfv_nostopmu"]->Fill(t->slc_longesttrack_theta->at(scl_ll_max));
+        hmap_multpfp["outfv_nostopmu"]->Fill(t->slc_mult_pfp->at(scl_ll_max));
+        hmap_multtracktol["outfv_nostopmu"]->Fill(t->slc_mult_track_tolerance->at(scl_ll_max));
       }
-      //if (at->slc_mult_track_tolerance->at(scl_ll_max) == 2) std::cout << "Is OutFV with mult_track_tolerance=2. event: " << at->event << std::endl;
+      //if (t->slc_mult_track_tolerance->at(scl_ll_max) == 2) std::cout << "Is OutFV with mult_track_tolerance=2. event: " << t->event << std::endl;
     }
     // cosmic
     else{
       bkg_cosmic_sel ++;
-      if (at->slc_crosses_top_boundary->at(scl_ll_max) == 1 )
+      if (t->slc_crosses_top_boundary->at(scl_ll_max) == 1 )
         bkg_cosmic_top_sel++;
-      pEff->Fill(false, at->nu_e);
-      hmap_trklen["cosmic"]->Fill(at->slc_longesttrack_length->at(scl_ll_max));
-      hmap_trkphi["cosmic"]->Fill(at->slc_longesttrack_phi->at(scl_ll_max));
-      hmap_trktheta["cosmic"]->Fill(at->slc_longesttrack_theta->at(scl_ll_max));
-      hmap_multpfp["cosmic"]->Fill(at->slc_mult_pfp->at(scl_ll_max));
-      hmap_multtracktol["cosmic"]->Fill(at->slc_mult_track_tolerance->at(scl_ll_max));
-      //std::cout << "Is a cosmic but is selected. event: " << at->event << std::endl;
+      pEff->Fill(false, t->nu_e);
+      hmap_trklen["cosmic"]->Fill(t->slc_longesttrack_length->at(scl_ll_max));
+      hmap_trkphi["cosmic"]->Fill(t->slc_longesttrack_phi->at(scl_ll_max));
+      hmap_trktheta["cosmic"]->Fill(t->slc_longesttrack_theta->at(scl_ll_max));
+      hmap_multpfp["cosmic"]->Fill(t->slc_mult_pfp->at(scl_ll_max));
+      hmap_multtracktol["cosmic"]->Fill(t->slc_mult_track_tolerance->at(scl_ll_max));
+      //std::cout << "Is a cosmic but is selected. event: " << t->event << std::endl;
       
-      if (at->slc_origin_extra->at(scl_ll_max) == 0) {
-        hmap_trklen["cosmic_stopmu"]->Fill(at->slc_longesttrack_length->at(scl_ll_max));
-        hmap_trkphi["cosmic_stopmu"]->Fill(at->slc_longesttrack_phi->at(scl_ll_max));
-        hmap_trktheta["cosmic_stopmu"]->Fill(at->slc_longesttrack_theta->at(scl_ll_max));
-        hmap_multpfp["cosmic_stopmu"]->Fill(at->slc_mult_pfp->at(scl_ll_max));
-        hmap_multtracktol["cosmic_stopmu"]->Fill(at->slc_mult_track_tolerance->at(scl_ll_max));
+      if (t->slc_origin_extra->at(scl_ll_max) == 0) {
+        hmap_trklen["cosmic_stopmu"]->Fill(t->slc_longesttrack_length->at(scl_ll_max));
+        hmap_trkphi["cosmic_stopmu"]->Fill(t->slc_longesttrack_phi->at(scl_ll_max));
+        hmap_trktheta["cosmic_stopmu"]->Fill(t->slc_longesttrack_theta->at(scl_ll_max));
+        hmap_multpfp["cosmic_stopmu"]->Fill(t->slc_mult_pfp->at(scl_ll_max));
+        hmap_multtracktol["cosmic_stopmu"]->Fill(t->slc_mult_track_tolerance->at(scl_ll_max));
       } else {
-        hmap_trklen["cosmic_nostopmu"]->Fill(at->slc_longesttrack_length->at(scl_ll_max));
-        hmap_trkphi["cosmic_nostopmu"]->Fill(at->slc_longesttrack_phi->at(scl_ll_max));
-        hmap_trktheta["cosmic_nostopmu"]->Fill(at->slc_longesttrack_theta->at(scl_ll_max));
-        hmap_multpfp["cosmic_nostopmu"]->Fill(at->slc_mult_pfp->at(scl_ll_max));
-        hmap_multtracktol["cosmic_nostopmu"]->Fill(at->slc_mult_track_tolerance->at(scl_ll_max));
+        hmap_trklen["cosmic_nostopmu"]->Fill(t->slc_longesttrack_length->at(scl_ll_max));
+        hmap_trkphi["cosmic_nostopmu"]->Fill(t->slc_longesttrack_phi->at(scl_ll_max));
+        hmap_trktheta["cosmic_nostopmu"]->Fill(t->slc_longesttrack_theta->at(scl_ll_max));
+        hmap_multpfp["cosmic_nostopmu"]->Fill(t->slc_mult_pfp->at(scl_ll_max));
+        hmap_multtracktol["cosmic_nostopmu"]->Fill(t->slc_mult_track_tolerance->at(scl_ll_max));
       }
     }
     
@@ -1105,16 +1096,17 @@ int main(int argc, char* argv[]) {
                 targetPOT/totalPOT,
                 hmap_trklen);
   
+  
   // Construct legend
   TLegend* leg2;
-  if (_breackdownPlots){
+  if (_breakdownPlots){
     leg2 = new TLegend(0.56,0.37,0.82,0.82,NULL,"brNDC");
   } else {
     leg2 = new TLegend(0.56,0.54,0.82,0.82,NULL,"brNDC");
   }
   std::stringstream sstm;
   // numu
-  if (_breackdownPlots) {
+  if (_breakdownPlots) {
   leg2->AddEntry(hmap_trklen["signal_stopmu"],"#nu_{#mu} CC (stopping #mu)","f");
   leg2->AddEntry(hmap_trklen["signal_nostopmu"],"#nu_{#mu} CC (other)","f");
   } else {
@@ -1134,7 +1126,7 @@ int main(int argc, char* argv[]) {
   sstm.str("");
   
   // nc, outfv, cosmic
-  if (_breackdownPlots) {
+  if (_breakdownPlots) {
   leg2->AddEntry(hmap_trklen["nc_other"],"NC (other)","f");
   leg2->AddEntry(hmap_trklen["nc_pion"],"NC (pion)","f");
   leg2->AddEntry(hmap_trklen["nc_proton"],"NC (proton)","f");
@@ -1220,7 +1212,11 @@ int main(int argc, char* argv[]) {
   
   
   file_out->cd();
-  //h_trklen_total->Write();
+  for (auto iter : hmap_trklen) {
+    iter.second->Write();
+  }
+  h_pot->Write();
+  h_nevts->Write();
   file_out->Close();
   
   
@@ -1260,7 +1256,7 @@ void DrawTHStack(THStack *hs_trklen,
   }
   
   
-  if (_breackdownPlots) {
+  if (_breakdownPlots) {
     themap["cosmic_nostopmu"]->SetLineColor(kBlue+2);
     themap["cosmic_nostopmu"]->SetFillColor(kBlue+2);
     hs_trklen->Add(themap["cosmic_nostopmu"]);
@@ -1302,7 +1298,7 @@ void DrawTHStack(THStack *hs_trklen,
   themap["nue"]->SetFillColor(kMagenta+1);
   hs_trklen->Add(themap["nue"]);
   
-  if (_breackdownPlots) {
+  if (_breakdownPlots) {
     themap["signal_nostopmu"]->SetLineColor(kRed+2);
     themap["signal_nostopmu"]->SetFillColor(kRed+2);
     hs_trklen->Add(themap["signal_nostopmu"]);
