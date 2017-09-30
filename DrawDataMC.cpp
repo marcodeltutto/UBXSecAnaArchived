@@ -24,6 +24,7 @@
 #include "AnaTree.h"
 #include "Spectrum.hpp"
 #include "Spectrum2D.hpp"
+#include "PlottingTools.h"
 
 
 const bool _breakdownPlots = true;
@@ -84,12 +85,6 @@ int main(int argc, char* argv[]) {
   std::string bnbon_file_name  = "ubxsecana_output.root";
   std::string extbnb_file_name = "ubxsecana_output.root";
   double bnbon_pot_meas        = -1;
-
-  
-  std::cout << "argc " << argc << std::endl;
-  std::cout << "argv[0] " << argv[0] << std::endl;
-  std::cout << "argv[1] " << argv[1] << std::endl;
-
   
   
   int opt;
@@ -136,55 +131,85 @@ int main(int argc, char* argv[]) {
   //gROOT->SetBatch(kTRUE);
   gROOT->ProcessLine("gErrorIgnoreLevel = 2001;"); // 1001: INFO, 2001: WARNINGS, 3001: ERRORS
   gROOT->ProcessLine(".x rootlogon.C");
+
+  gROOT->ProcessLine(".L loader_C.so");
   
   int bnbon_total_events = 1000;
   int extbnb_total_events = 1000;
   double mc_pot_sim = 6.e19;
   
-  
+  // *************************************
+  // Opening files
+  // *************************************
   TFile* mc_file = TFile::Open(mc_file_name.c_str(), "READ");
   TFile* bnbon_file = TFile::Open(bnbon_file_name.c_str(), "READ");
   TFile* extbnb_file = TFile::Open(extbnb_file_name.c_str(), "READ");
   
-  TH1D* h_trklen_total_mc = (TH1D*)mc_file->Get("h_trklen_total");
-  TH1D* h_trklen_total_bnbon = (TH1D*)bnbon_file->Get("h_trklen_total");
-  TH1D* h_trklen_total_extbnb = (TH1D*)extbnb_file->Get("h_trklen_total");
   
+  // *************************************
   // Getting number of events for bnbon
+  // *************************************
   TH1D* h_nevts_bnbon = (TH1D*)bnbon_file->Get("h_nevts");
   bnbon_total_events = h_nevts_bnbon->GetBinContent(1);
-  std::cout << "Number of events (BNBON): " << bnbon_total_events << std::endl;
+  std::cout << "Number of events (BNBON):  " << bnbon_total_events << std::endl;
   
+  
+  // *************************************
   // Getting number of events for extbnb
+  // *************************************
   TH1D* h_nevts_extbnb = (TH1D*)extbnb_file->Get("h_nevts");
   extbnb_total_events = h_nevts_extbnb->GetBinContent(1);
-  std::cout << "Number of events (EXTBNB): " << extbnb_total_events << std::endl;
+  std::cout << "Number of events (EXTBNB): " << extbnb_total_events << std::endl << std::endl;
   
+  
+  // *************************************
   // Getting simulated POT
+  // *************************************
   TH1D* h_simpot = (TH1D*)mc_file->Get("h_pot");
   mc_pot_sim = h_simpot->GetBinContent(1);
-  std::cout << "Simulated POT: " << mc_pot_sim << std::endl;
+  std::cout << "Simulated POT:      " << mc_pot_sim << std::endl;
   std::cout << "BNBON Measured POT: " << bnbon_pot_meas << std::endl;
   
-  // Scale factors
+  // *************************************
+  // Calculating scale factors
+  // *************************************
   double scale_factor_extbnb = 1.23 * (382718./(double)extbnb_total_events) * ((double)bnbon_total_events/547616.);
   double scale_factor_bnbon = 1.; //bnbon_pot_meas * bnbon_pot_target;
   double scale_factor_mc = bnbon_pot_meas / mc_pot_sim;
-  
   std::cout << "Data Scale Factors:" << std::endl;
   std::cout << "\t BNBON: " << scale_factor_bnbon << std::endl;
   std::cout << "\t EXTBNB: " << scale_factor_extbnb << std::endl;
   std::cout << "MC Scale Factors:" << std::endl;
   std::cout << "\t BNBCOSMIC: " << scale_factor_mc << std::endl;
 
+  
+  // *************************************
+  // Getting the relevant histograms
+  // *************************************
+  std::map<std::string,TH1D*>* temp_map;
+  mc_file->GetObject("hmap_trklen", temp_map);
+  std::map<std::string,TH1D*> hmap_trklen_mc = *temp_map;
+  //TH1D* h_trklen_total_mc = (TH1D*)mc_file->Get("h_trklen_total");
+  TH1D* h_trklen_total_bnbon = (TH1D*)bnbon_file->Get("h_trklen_total");
+  TH1D* h_trklen_total_extbnb = (TH1D*)extbnb_file->Get("h_trklen_total");
+  
+  
+  // *************************************
+  // Doing beam-on minus beam-off subctraction
+  // *************************************
   h_trklen_total_extbnb->Scale(scale_factor_extbnb);
   h_trklen_total_bnbon->Scale(scale_factor_bnbon);
-  h_trklen_total_mc->Scale(scale_factor_mc);
-
+  TH1D* h_trklen_data = (TH1D*)h_trklen_total_bnbon->Clone("h_trklen_data");
+  h_trklen_total_bnbon->Add(h_trklen_total_extbnb, -1.);
   
   
-  TCanvas * canvas_muon_reco_efficiency = new TCanvas();
-  h_trklen_total_mc->Draw("histo");
+  // *************************************
+  // Plotting data and MC distribution
+  // *************************************
+  TCanvas* canvas_trklen = new TCanvas();
+  THStack *hs_trklen_mc = new THStack("hs_trklen",";Candidate Track Length [cm]; Selected Events");
+  DrawTHStack(hs_trklen_mc, scale_factor_mc, true, hmap_trklen_mc);
+  h_trklen_data->Draw("E1 same");
   
   
   // Computing time

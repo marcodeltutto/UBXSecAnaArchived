@@ -3,6 +3,9 @@
 #include <string>
 #include <ctime>
 #include <vector>
+#include <map>
+#include <stdlib.h>
+#include <stdio.h>
 
 #include <TRandom1.h>
 #include <TSystem.h>
@@ -21,6 +24,8 @@
 #include "AnaTree.h"
 #include "Spectrum.hpp"
 #include "Spectrum2D.hpp"
+#include "PlottingTools.h"
+
 //#include "PlotHandler.hpp"
 //#include "SelectionTools.hpp"
 
@@ -89,11 +94,6 @@ double CalcLength(const double& x_1, const double& y_1, const double& z_1, const
   return sqrt(pow(x_1-x_2, 2) + pow(y_1-y_2, 2) + pow(z_1-z_2, 2));
 }
 
-//____________________________________________________________________________________________________
-void DrawTHStack(THStack *hs_trklen,
-                   double pot_scaling,
-                   std::map<std::string,TH1D*> themap);
-
 
 
 
@@ -104,21 +104,59 @@ int main(int argc, char* argv[]) {
   
   clock_t begin = clock();
   
+  std::string filen     = "ubxsec_output.root";
+  //std::string bnbon_file_name  = "ubxsecana_output.root";
+  //std::string extbnb_file_name = "ubxsecana_output.root";
+  //double bnbon_pot_meas        = -1;
+  bool evalPOT = false;
+  int    maxEntries = -1;
+  
+  int opt;
+  while ((opt = getopt (argc, argv, "f:e:p")) != -1)
+  {
+    switch (opt)
+    {
+      case 'f':
+        std::cout << "MC file: " << optarg << std::endl;
+        filen = optarg;
+        break;
+      case 'e':
+        std::cout << "Run over entries: " << optarg << std::endl;
+        maxEntries = atof(optarg);
+        break;
+      case 'p':
+        std::cout << "Calculating POT." << std::endl;
+        evalPOT = true;
+        break;
+      default:
+        std::cerr << "Usage: " << argv[0] << " [-f file_name] [-e max_entries] [-p]" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    
+  }
+  
+  
+  
+   /*
   if (argc != 4) {
     cout << "Provide 3 arguments!" << endl;
     cout << "./NuMICCInclusive bnb pot maxentries." << endl;
     exit(0);
   }
   
+ 
   string filen      = argv[1];
   string dopot      = argv[2];
   int    maxEntries = atoi(argv[3]);
   cout << endl << "File name " << filen << " beam." << endl;
+  */
   
   TApplication* rootapp = new TApplication("ROOT Application",&argc, argv);
   //gROOT->SetBatch(kTRUE);
   gROOT->ProcessLine("gErrorIgnoreLevel = 2001;"); // 1001: INFO, 2001: WARNINGS, 3001: ERRORS
   gROOT->ProcessLine(".x rootlogon.C");
+
+  gROOT->ProcessLine(".L loader_C.so");
   
   std::cout << "Opening output file ubxsecana_output.root." << std::endl;
   TFile *file_out = new TFile("ubxsecana_output.root","RECREATE");
@@ -131,10 +169,10 @@ int main(int argc, char* argv[]) {
   //if(beam == "bnb")  pattern = "files/output9850.root";
   
   
-  bool evalPOT = false;
+  
   double totalPOT = 0.;
   
-  if (dopot == "pot") evalPOT = true;
+  //if (dopot == "pot") evalPOT = true;
   if (maxEntries > 0) evalPOT = false;
   
   
@@ -1094,6 +1132,7 @@ int main(int argc, char* argv[]) {
   THStack *hs_trklen = new THStack("hs_trklen",";Candidate Track Length [cm]; Selected Events");
   DrawTHStack(hs_trklen,
                 targetPOT/totalPOT,
+              _breakdownPlots,
                 hmap_trklen);
   
   
@@ -1160,6 +1199,7 @@ int main(int argc, char* argv[]) {
   THStack *hs_trkphi = new THStack("hs_trkphi",";Candidate Track #phi; Selected Events");
   DrawTHStack(hs_trkphi,
               targetPOT/totalPOT,
+              _breakdownPlots,
               hmap_trkphi);
   leg2->Draw();
   DrawPOT(totalPOT);
@@ -1174,6 +1214,7 @@ int main(int argc, char* argv[]) {
   THStack *hs_trktheta = new THStack("hs_trktheta",";Candidate Track cos(#theta); Selected Events");
   DrawTHStack(hs_trktheta,
               targetPOT/totalPOT,
+              _breakdownPlots,
               hmap_trktheta);
   leg2->Draw();
   DrawPOT(totalPOT);
@@ -1187,6 +1228,7 @@ int main(int argc, char* argv[]) {
   THStack *hs_multpfp = new THStack("hs_multpfp",";PFP Multiplicity; Selected Events");
   DrawTHStack(hs_multpfp,
               targetPOT/totalPOT,
+              _breakdownPlots,
               hmap_multpfp);
   leg2->Draw();
   DrawPOT(totalPOT);
@@ -1200,6 +1242,7 @@ int main(int argc, char* argv[]) {
   THStack *hs_multtracktol = new THStack("hs_multtracktol",";Track Multiplicity (5 cm); Selected Events");
   DrawTHStack(hs_multtracktol,
               targetPOT/totalPOT,
+              _breakdownPlots,
               hmap_multtracktol);
   leg2->Draw();
   DrawPOT(totalPOT);
@@ -1217,6 +1260,10 @@ int main(int argc, char* argv[]) {
   }
   h_pot->Write();
   h_nevts->Write();
+
+  file_out->WriteObject(&hmap_trklen, "hmap_trklen");
+  file_out->Write();
+  
   file_out->Close();
   
   
@@ -1237,90 +1284,6 @@ int main(int argc, char* argv[]) {
   return 0;
 }
 
-
-
-
-
-
-
-
-//**********************************************
-
-void DrawTHStack(THStack *hs_trklen,
-                   double pot_scaling,
-                   std::map<std::string,TH1D*> themap){
-  
-  
-  for (auto iter : themap) {
-    iter.second->Scale(pot_scaling);
-  }
-  
-  
-  if (_breakdownPlots) {
-    themap["cosmic_nostopmu"]->SetLineColor(kBlue+2);
-    themap["cosmic_nostopmu"]->SetFillColor(kBlue+2);
-    hs_trklen->Add(themap["cosmic_nostopmu"]);
-    themap["cosmic_stopmu"]->SetLineColor(kBlue);
-    themap["cosmic_stopmu"]->SetFillColor(kBlue);
-    hs_trklen->Add(themap["cosmic_stopmu"]);
-    themap["outfv_nostopmu"]->SetLineColor(kGreen+3);
-    themap["outfv_nostopmu"]->SetFillColor(kGreen+3);
-    hs_trklen->Add(themap["outfv_nostopmu"]);
-    themap["outfv_stopmu"]->SetLineColor(kGreen+2);
-    themap["outfv_stopmu"]->SetFillColor(kGreen+2);
-    hs_trklen->Add(themap["outfv_stopmu"]);
-    themap["nc_proton"]->SetLineColor(kGray+2);
-    themap["nc_proton"]->SetFillColor(kGray+2);
-    hs_trklen->Add(themap["nc_proton"]);
-    themap["nc_pion"]->SetLineColor(kGray+1);
-    themap["nc_pion"]->SetFillColor(kGray+1);
-    hs_trklen->Add(themap["nc_pion"]);
-    themap["nc_other"]->SetLineColor(kGray);
-    themap["nc_other"]->SetFillColor(kGray);
-    hs_trklen->Add(themap["nc_other"]);
-  }
-  else {
-    themap["cosmic"]->SetLineColor(kBlue+2);
-    themap["cosmic"]->SetFillColor(kBlue+2);
-    hs_trklen->Add(themap["cosmic"]);
-    themap["outfv"]->SetLineColor(kGreen+2);
-    themap["outfv"]->SetFillColor(kGreen+2);
-    hs_trklen->Add(themap["outfv"]);
-    themap["nc"]->SetLineColor(kGray);
-    themap["nc"]->SetFillColor(kGray);
-    hs_trklen->Add(themap["nc"]);
-  }
-  
-  themap["anumu"]->SetLineColor(kOrange-3);
-  themap["anumu"]->SetFillColor(kOrange-3);
-  hs_trklen->Add(themap["anumu"]);
-  themap["nue"]->SetLineColor(kMagenta+1);
-  themap["nue"]->SetFillColor(kMagenta+1);
-  hs_trklen->Add(themap["nue"]);
-  
-  if (_breakdownPlots) {
-    themap["signal_nostopmu"]->SetLineColor(kRed+2);
-    themap["signal_nostopmu"]->SetFillColor(kRed+2);
-    hs_trklen->Add(themap["signal_nostopmu"]);
-    themap["signal_stopmu"]->SetLineColor(kRed);
-    themap["signal_stopmu"]->SetFillColor(kRed);
-    hs_trklen->Add(themap["signal_stopmu"]);
-  }
-  else {
-    themap["signal"]->SetLineColor(kRed);
-    themap["signal"]->SetFillColor(kRed);
-    hs_trklen->Add(themap["signal"]);
-  }
-  hs_trklen->Draw();
-  
-  //h_trklen_total->DrawCopy("hist");
-  
-  //gStyle->SetHatchesLineWidth(1);
-  themap["total"]->SetFillColor(kBlack);
-  themap["total"]->SetFillStyle(3005);
-  themap["total"]->Draw("E2 same");
-
-}
 
 
 
