@@ -66,12 +66,6 @@ void DrawPOT(double pot)
 }
 
 
-//____________________________________________________________________________________________________
-void DrawTHStack(THStack *hs_trklen,
-                 double pot_scaling,
-                 std::map<std::string,TH1D*> themap);
-
-
 
 
 //____________________________________________________________________________________________________
@@ -168,7 +162,7 @@ int main(int argc, char* argv[]) {
   TH1D* h_simpot = (TH1D*)mc_file->Get("h_pot");
   mc_pot_sim = h_simpot->GetBinContent(1);
   std::cout << "Simulated POT:      " << mc_pot_sim << std::endl;
-  std::cout << "BNBON Measured POT: " << bnbon_pot_meas << std::endl;
+  std::cout << "BNBON Measured POT: " << bnbon_pot_meas << std::endl << std::endl;
   
   // *************************************
   // Calculating scale factors
@@ -189,9 +183,33 @@ int main(int argc, char* argv[]) {
   std::map<std::string,TH1D*>* temp_map;
   mc_file->GetObject("hmap_trklen", temp_map);
   std::map<std::string,TH1D*> hmap_trklen_mc = *temp_map;
+  mc_file->GetObject("hmap_trktheta", temp_map);
+  std::map<std::string,TH1D*> hmap_trktheta_mc = *temp_map;
+  mc_file->GetObject("hmap_trkphi", temp_map);
+  std::map<std::string,TH1D*> hmap_trkphi_mc = *temp_map;
+  mc_file->GetObject("hmap_multpfp", temp_map);
+  std::map<std::string,TH1D*> hmap_multpfp_mc = *temp_map;
+  mc_file->GetObject("hmap_multtracktol", temp_map);
+  std::map<std::string,TH1D*> hmap_multtracktol_mc = *temp_map;
+  mc_file->GetObject("hmap_xdiff", temp_map);
+  std::map<std::string,TH1D*> hmap_xdiff_mc = *temp_map;
+  mc_file->GetObject("hmap_zdiff", temp_map);
+  std::map<std::string,TH1D*> hmap_zdiff_mc = *temp_map;
   //TH1D* h_trklen_total_mc = (TH1D*)mc_file->Get("h_trklen_total");
   TH1D* h_trklen_total_bnbon = (TH1D*)bnbon_file->Get("h_trklen_total");
   TH1D* h_trklen_total_extbnb = (TH1D*)extbnb_file->Get("h_trklen_total");
+  TH1D* h_trktheta_total_bnbon = (TH1D*)bnbon_file->Get("h_trktheta_total");
+  TH1D* h_trktheta_total_extbnb = (TH1D*)extbnb_file->Get("h_trktheta_total");
+  TH1D* h_trkphi_total_bnbon = (TH1D*)bnbon_file->Get("h_trkphi_total");
+  TH1D* h_trkphi_total_extbnb = (TH1D*)extbnb_file->Get("h_trkphi_total");
+  TH1D* h_multpfp_total_bnbon = (TH1D*)bnbon_file->Get("h_multpfp_total");
+  TH1D* h_multpfp_total_extbnb = (TH1D*)extbnb_file->Get("h_multpfp_total");
+  TH1D* h_multtracktol_total_bnbon = (TH1D*)bnbon_file->Get("h_multtracktol_total");
+  TH1D* h_multtracktol_total_extbnb = (TH1D*)extbnb_file->Get("h_multtracktol_total");
+  TH1D* h_xdiff_total_bnbon = (TH1D*)bnbon_file->Get("h_xdiff_total");
+  TH1D* h_xdiff_total_extbnb = (TH1D*)extbnb_file->Get("h_xdiff_total");
+  TH1D* h_zdiff_total_bnbon = (TH1D*)bnbon_file->Get("h_zdiff_total");
+  TH1D* h_zdiff_total_extbnb = (TH1D*)extbnb_file->Get("h_zdiff_total");
   
   
   // *************************************
@@ -200,7 +218,44 @@ int main(int argc, char* argv[]) {
   h_trklen_total_extbnb->Scale(scale_factor_extbnb);
   h_trklen_total_bnbon->Scale(scale_factor_bnbon);
   TH1D* h_trklen_data = (TH1D*)h_trklen_total_bnbon->Clone("h_trklen_data");
-  h_trklen_total_bnbon->Add(h_trklen_total_extbnb, -1.);
+  h_trklen_data->Sumw2();
+  h_trklen_data->Add(h_trklen_total_extbnb, -1.);
+  
+  h_trktheta_total_extbnb->Scale(scale_factor_extbnb);
+  h_trktheta_total_bnbon->Scale(scale_factor_bnbon);
+  TH1D* h_trktheta_data = (TH1D*)h_trktheta_total_bnbon->Clone("h_trktheta_data");
+  h_trktheta_data->Sumw2();
+  h_trktheta_data->Add(h_trktheta_total_extbnb, -1.);
+  
+  h_trkphi_total_extbnb->Scale(scale_factor_extbnb);
+  h_trkphi_total_bnbon->Scale(scale_factor_bnbon);
+  TH1D* h_trkphi_data = (TH1D*)h_trkphi_total_bnbon->Clone("h_trklen_data");
+  h_trkphi_data->Sumw2();
+  h_trkphi_data->Add(h_trkphi_total_extbnb, -1.);
+  
+  h_multpfp_total_extbnb->Scale(scale_factor_extbnb);
+  h_multpfp_total_bnbon->Scale(scale_factor_bnbon);
+  TH1D* h_multpfp_data = (TH1D*)h_multpfp_total_bnbon->Clone("h_multpfp_data");
+  h_multpfp_data->Sumw2();
+  h_multpfp_data->Add(h_multpfp_total_extbnb, -1.);
+  
+  h_multtracktol_total_extbnb->Scale(scale_factor_extbnb);
+  h_multtracktol_total_bnbon->Scale(scale_factor_bnbon);
+  TH1D* h_multtracktol_data = (TH1D*)h_multtracktol_total_bnbon->Clone("h_multtracktol_data");
+  h_multtracktol_data->Sumw2();
+  h_multtracktol_data->Add(h_multtracktol_total_extbnb, -1.);
+  
+  h_xdiff_total_extbnb->Scale(scale_factor_extbnb);
+  h_xdiff_total_bnbon->Scale(scale_factor_bnbon);
+  TH1D* h_xdiff_data = (TH1D*)h_xdiff_total_bnbon->Clone("h_xdiff_data");
+  h_xdiff_data->Sumw2();
+  h_xdiff_data->Add(h_xdiff_total_extbnb, -1.);
+  
+  h_zdiff_total_extbnb->Scale(scale_factor_extbnb);
+  h_zdiff_total_bnbon->Scale(scale_factor_bnbon);
+  TH1D* h_zdiff_data = (TH1D*)h_zdiff_total_bnbon->Clone("h_zdiff_data");
+  h_zdiff_data->Sumw2();
+  h_zdiff_data->Add(h_zdiff_total_extbnb, -1.);
   
   
   // *************************************
@@ -208,9 +263,72 @@ int main(int argc, char* argv[]) {
   // *************************************
   TCanvas* canvas_trklen = new TCanvas();
   THStack *hs_trklen_mc = new THStack("hs_trklen",";Candidate Track Length [cm]; Selected Events");
+  std::cout << "before hmap_trklen_mc[\"total\"]->Integral()" << hmap_trklen_mc["total"]->Integral() << std::endl;
   DrawTHStack(hs_trklen_mc, scale_factor_mc, true, hmap_trklen_mc);
   h_trklen_data->Draw("E1 same");
+  std::cout << "h_trklen_data->Integral()" << h_trklen_data->Integral() << std::endl;
+  std::cout << "after hmap_trklen_mc[\"total\"]->Integral()" << hmap_trklen_mc["total"]->Integral() << std::endl;
+
   
+  TCanvas* canvas_trktheta = new TCanvas();
+  THStack *hs_trktheta_mc = new THStack("hs_trktheta",";Candidate Track cos(#theta); Selected Events");
+  DrawTHStack(hs_trktheta_mc, scale_factor_mc, true, hmap_trktheta_mc);
+  h_trktheta_data->Draw("E1 same");
+  
+  TCanvas* canvas_trkphi = new TCanvas();
+  THStack *hs_trkphi_mc = new THStack("hs_trkphi",";Candidate Track #phi; Selected Events");
+  DrawTHStack(hs_trkphi_mc, scale_factor_mc, true, hmap_trkphi_mc);
+  h_trkphi_data->Draw("E1 same");
+  
+  TCanvas* canvas_multpfp = new TCanvas();
+  THStack *hs_multpfp_mc = new THStack("hs_multpfp",";PFP Multiplicity; Selected Events");
+  DrawTHStack(hs_multpfp_mc, scale_factor_mc, true, hmap_multpfp_mc);
+  h_multpfp_data->Draw("E1 same");
+  
+  TCanvas* canvas_multtracktol = new TCanvas();
+  THStack *hs_multtracktol_mc = new THStack("hs_multtracktol",";Track Multiplicity (5 cm); Selected Events");
+  DrawTHStack(hs_multtracktol_mc, scale_factor_mc, true, hmap_multtracktol_mc);
+  h_multtracktol_data->Draw("E1 same");
+  
+  TCanvas* canvas_xdiff = new TCanvas();
+  THStack *hs_xdiff_mc = new THStack("hs_xdiff",";xdiff; TPCObjects");
+  DrawTHStack2(hs_xdiff_mc, scale_factor_mc, true, hmap_xdiff_mc);
+  h_xdiff_data->Draw("E1 same");
+  std::cout << "h_xdiff_data->Integral()" << h_xdiff_data->Integral() << std::endl;
+  std::cout << "hmap_xdiff_mc[\"total\"]->Integral()" << hmap_xdiff_mc["total"]->Integral() << std::endl;
+
+  TCanvas* canvas_zdiff = new TCanvas();
+  THStack *hs_zdiff_mc = new THStack("hs_zdiff",";zdiff; TPCObjects");
+  DrawTHStack2(hs_zdiff_mc, scale_factor_mc, true, hmap_zdiff_mc);
+  h_zdiff_data->Draw("E1 same");
+  std::cout << "h_zdiff_data->Integral()" << h_zdiff_data->Integral() << std::endl;
+  std::cout << "hmap_zdiff_mc[\"total\"]->Integral()" << hmap_zdiff_mc["total"]->Integral() << std::endl;
+
+  
+  // *************************************
+  // Other data/MC distributions
+  // *************************************
+  TH1D* h_flsTime_mc = (TH1D*)mc_file->Get("h_flsTime_wcut");
+  TH1D* h_flsTime_bnbon = (TH1D*)bnbon_file->Get("h_flsTime_wcut");
+  TH1D* h_flsTime_extbnb = (TH1D*)extbnb_file->Get("h_flsTime_wcut");
+  h_flsTime_extbnb->Scale(scale_factor_extbnb);
+  h_flsTime_bnbon->Scale(scale_factor_bnbon);
+  TH1D* h_flsTime_data = (TH1D*)h_flsTime_bnbon->Clone("h_flsTime_data");
+  h_flsTime_data->Sumw2();
+  h_flsTime_data->Add(h_flsTime_extbnb, -1.);
+  TCanvas* canvas_flsTime = new TCanvas();
+  h_flsTime_mc->Draw("histo");
+  h_flsTime_data->SetLineColor(kRed);
+  h_flsTime_data->Draw("E1 same");
+  new TCanvas();
+  h_flsTime_mc->SetLineColor(kBlack);
+  h_flsTime_bnbon->SetLineColor(kBlue);
+  h_flsTime_extbnb->SetLineColor(kRed);
+  h_flsTime_mc->Draw("histo");
+  h_flsTime_bnbon->Draw("E1 same");
+  h_flsTime_extbnb->Draw("E1 same");
+
+
   
   // Computing time
   clock_t end = clock();
@@ -222,92 +340,6 @@ int main(int argc, char* argv[]) {
   
   return 0;
 }
-
-
-
-
-
-
-
-
-//**********************************************
-
-void DrawTHStack(THStack *hs_trklen,
-                 double pot_scaling,
-                 std::map<std::string,TH1D*> themap){
-  
-  
-  for (auto iter : themap) {
-    iter.second->Scale(pot_scaling);
-  }
-  
-  
-  if (_breakdownPlots) {
-    themap["cosmic_nostopmu"]->SetLineColor(kBlue+2);
-    themap["cosmic_nostopmu"]->SetFillColor(kBlue+2);
-    hs_trklen->Add(themap["cosmic_nostopmu"]);
-    themap["cosmic_stopmu"]->SetLineColor(kBlue);
-    themap["cosmic_stopmu"]->SetFillColor(kBlue);
-    hs_trklen->Add(themap["cosmic_stopmu"]);
-    themap["outfv_nostopmu"]->SetLineColor(kGreen+3);
-    themap["outfv_nostopmu"]->SetFillColor(kGreen+3);
-    hs_trklen->Add(themap["outfv_nostopmu"]);
-    themap["outfv_stopmu"]->SetLineColor(kGreen+2);
-    themap["outfv_stopmu"]->SetFillColor(kGreen+2);
-    hs_trklen->Add(themap["outfv_stopmu"]);
-    themap["nc_proton"]->SetLineColor(kGray+2);
-    themap["nc_proton"]->SetFillColor(kGray+2);
-    hs_trklen->Add(themap["nc_proton"]);
-    themap["nc_pion"]->SetLineColor(kGray+1);
-    themap["nc_pion"]->SetFillColor(kGray+1);
-    hs_trklen->Add(themap["nc_pion"]);
-    themap["nc_other"]->SetLineColor(kGray);
-    themap["nc_other"]->SetFillColor(kGray);
-    hs_trklen->Add(themap["nc_other"]);
-  }
-  else {
-    themap["cosmic"]->SetLineColor(kBlue+2);
-    themap["cosmic"]->SetFillColor(kBlue+2);
-    hs_trklen->Add(themap["cosmic"]);
-    themap["outfv"]->SetLineColor(kGreen+2);
-    themap["outfv"]->SetFillColor(kGreen+2);
-    hs_trklen->Add(themap["outfv"]);
-    themap["nc"]->SetLineColor(kGray);
-    themap["nc"]->SetFillColor(kGray);
-    hs_trklen->Add(themap["nc"]);
-  }
-  
-  themap["anumu"]->SetLineColor(kOrange-3);
-  themap["anumu"]->SetFillColor(kOrange-3);
-  hs_trklen->Add(themap["anumu"]);
-  themap["nue"]->SetLineColor(kMagenta+1);
-  themap["nue"]->SetFillColor(kMagenta+1);
-  hs_trklen->Add(themap["nue"]);
-  
-  if (_breakdownPlots) {
-    themap["signal_nostopmu"]->SetLineColor(kRed+2);
-    themap["signal_nostopmu"]->SetFillColor(kRed+2);
-    hs_trklen->Add(themap["signal_nostopmu"]);
-    themap["signal_stopmu"]->SetLineColor(kRed);
-    themap["signal_stopmu"]->SetFillColor(kRed);
-    hs_trklen->Add(themap["signal_stopmu"]);
-  }
-  else {
-    themap["signal"]->SetLineColor(kRed);
-    themap["signal"]->SetFillColor(kRed);
-    hs_trklen->Add(themap["signal"]);
-  }
-  hs_trklen->Draw();
-  
-  //h_trklen_total->DrawCopy("hist");
-  
-  //gStyle->SetHatchesLineWidth(1);
-  themap["total"]->SetFillColor(kBlack);
-  themap["total"]->SetFillStyle(3005);
-  themap["total"]->Draw("E2 same");
-  
-}
-
 
 
 

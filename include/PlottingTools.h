@@ -135,3 +135,57 @@ void DrawTHStack(THStack *hs_trklen,
 
 }
 
+
+
+
+
+//**********************************************************
+void DrawTHStack2(THStack *hs_trklen,
+                  double pot_scaling,
+                  bool _breakdownPlots,
+                  std::map<std::string,TH1D*> themap){
+  
+  
+  for (auto iter : themap) {
+    iter.second->Scale(pot_scaling);
+  }
+  
+  
+  
+  themap["background"]->SetLineColor(kBlue+2);
+  themap["background"]->SetFillColor(kBlue+2);
+  hs_trklen->Add(themap["background"]);
+  
+  themap["signal"]->SetLineColor(kRed+2);
+  themap["signal"]->SetFillColor(kRed+2);
+  hs_trklen->Add(themap["signal"]);
+  
+  hs_trklen->Draw();
+  
+  themap["total"]->SetFillColor(kBlack);
+  themap["total"]->SetFillStyle(3005);
+  themap["total"]->Draw("E2 same");
+  
+  
+  
+  
+  TLegend* leg2;
+  leg2 = new TLegend(0.56,0.54,0.82,0.82,NULL,"brNDC");
+
+  std::stringstream sstm;
+  
+  sstm << "Signal, " << std::setprecision(2)  << themap["signal"]->Integral() / themap["total"]->Integral()*100. << "%";
+  leg2->AddEntry(themap["signal"],sstm.str().c_str(),"f");
+  sstm.str("");
+  
+  sstm << "Background, " << std::setprecision(2)  << themap["background"]->Integral() / themap["total"]->Integral()*100. << "%";
+  leg2->AddEntry(themap["background"],sstm.str().c_str(),"f");
+  sstm.str("");
+  
+  leg2->AddEntry(themap["total"],"MC Stat Unc.","f");
+  leg2->Draw();
+  
+}
+
+
+

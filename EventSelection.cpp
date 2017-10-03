@@ -6,6 +6,7 @@
 #include <map>
 #include <stdlib.h>
 #include <stdio.h>
+#include <getopt.h>
 
 #include <TRandom1.h>
 #include <TSystem.h>
@@ -31,8 +32,9 @@
 
 const bool _breakdownPlots = true;
 
-const double _beamSpillStarts = 3.2; // us
-const double _beamSpillEnds   = 4.8; // us
+double _beamSpillStarts = 3.2;  // us
+double _beamSpillEnds   = 4.8;  // us
+double _flashShift      = 0.;//4.06; //us
 
 const double targetPOT = 4.95e19;
 
@@ -105,54 +107,97 @@ int main(int argc, char* argv[]) {
   clock_t begin = clock();
   
   std::string filen     = "ubxsec_output.root";
-  //std::string bnbon_file_name  = "ubxsecana_output.root";
-  //std::string extbnb_file_name = "ubxsecana_output.root";
-  //double bnbon_pot_meas        = -1;
   bool evalPOT = false;
-  int    maxEntries = -1;
+  int maxEntries = -1;
   
-  int opt;
-  while ((opt = getopt (argc, argv, "f:e:p")) != -1)
-  {
-    switch (opt)
-    {
+  //*************************
+  //* Getting input parameters
+  //*************************
+  
+  int c;
+  //int digit_optind = 0;
+  
+  while (1) {
+    //int this_option_optind = optind ? optind : 1;
+    int option_index = 0;
+    static struct option long_options[] = {
+      {"filename",    required_argument, 0,  'f' },
+      {"maxentries",  required_argument, 0,  'e' },
+      {"flashstart",  required_argument, 0,  'a' },
+      {"flashend",    required_argument, 0,  'b' },
+      {"flashshift",  required_argument, 0,  's' },
+      {0,             0,                 0,   0  }
+    };
+    
+    c = getopt_long(argc, argv, "f:e:a:b:s:p",
+                    long_options, &option_index);
+    if (c == -1)
+      break;
+    
+    switch (c) {
+      case 0:
+        std::cout << "Option " << long_options[option_index].name;
+        if (optarg)
+          std::cout << " with arg " << optarg << std::endl;
+        break;
+        
       case 'f':
-        std::cout << "MC file: " << optarg << std::endl;
+        std::cout << "Input file: " << optarg << std::endl;
         filen = optarg;
         break;
+        
       case 'e':
         std::cout << "Run over entries: " << optarg << std::endl;
         maxEntries = atof(optarg);
         break;
+        
+      case 'a':
+        std::cout << "Beam spill start time: " << optarg << std::endl;
+        _beamSpillStarts = atof(optarg);
+        break;
+        
+      case 'b':
+        std::cout << "Beam spill end time: " << optarg << std::endl;
+        _beamSpillEnds = atof(optarg);
+        break;
+        
+      case 's':
+        std::cout << "Flash shift: " << optarg << std::endl;
+        _flashShift = atof(optarg);
+        break;
+
       case 'p':
         std::cout << "Calculating POT." << std::endl;
         evalPOT = true;
         break;
+        
+      case '?':
+        break;
+        
       default:
-        std::cerr << "Usage: " << argv[0] << " [-f file_name] [-e max_entries] [-p]" << std::endl;
-        exit(EXIT_FAILURE);
+        printf("?? getopt returned character code 0%o ??\n", c);
     }
-    
   }
   
-  
-  
-   /*
-  if (argc != 4) {
-    cout << "Provide 3 arguments!" << endl;
-    cout << "./NuMICCInclusive bnb pot maxentries." << endl;
-    exit(0);
+  if (optind < argc) {
+    printf("non-option ARGV-elements: ");
+    while (optind < argc)
+      printf("%s ", argv[optind++]);
+    printf("\n");
   }
   
- 
-  string filen      = argv[1];
-  string dopot      = argv[2];
-  int    maxEntries = atoi(argv[3]);
-  cout << endl << "File name " << filen << " beam." << endl;
-  */
+  std::cout << "_beamSpillStarts is " << _beamSpillStarts << std::endl;
+  std::cout << "_beamSpillEnds is   " << _beamSpillEnds << std::endl;
+
+  
+  
+
+  //*************************
+  //* Starting ROOT application
+  //*************************
   
   TApplication* rootapp = new TApplication("ROOT Application",&argc, argv);
-  //gROOT->SetBatch(kTRUE);
+  gROOT->SetBatch(kTRUE);
   gROOT->ProcessLine("gErrorIgnoreLevel = 2001;"); // 1001: INFO, 2001: WARNINGS, 3001: ERRORS
   gROOT->ProcessLine(".x rootlogon.C");
 
@@ -164,17 +209,16 @@ int main(int argc, char* argv[]) {
     std::cout << "File opened successfully" << std::endl;
   
   string pattern = filen;
-  //if(beam == "numi") pattern = "/data/t2k/lar/uboone/prodgenie_numi_nu_uboone_MCC7/prodgenie_numi_nu_cosmic_uboone_merged_gen_g4_detsim_reco1_reco2_ana.root";
-  //if(beam == "bnb")  pattern = "/pnfs/uboone/persistent/users/aschu/MC_BNB_Cosmic/prodgenie_bnb_nu_cosmic_uboone_v05_08_00_at.root";
-  //if(beam == "bnb")  pattern = "files/output9850.root";
   
   
+  
+  //*************************
+  //* Getting POTs
+  //*************************
   
   double totalPOT = 0.;
   
-  //if (dopot == "pot") evalPOT = true;
   if (maxEntries > 0) evalPOT = false;
-  
   
   if (evalPOT) {
     
@@ -197,6 +241,9 @@ int main(int argc, char* argv[]) {
   } // end if evalPOT
   else
     totalPOT = -1.;
+  
+  double pot_scaling = 1.;
+  if (evalPOT) pot_scaling = targetPOT/totalPOT;
   
   
   TChain *chain_ubxsec;
@@ -222,7 +269,6 @@ int main(int argc, char* argv[]) {
    TFile *newfile = new TFile("selectedEntries.root","recreate");
    TTree *newtree = oldtree->CloneTree(0);
    */
-  
   
   //Spectrum* Sflashtime      = new Spectrum("flash_time",      ";Flash Time [#mus];Entries per bin",       300000, -3000, 3000, totalPOT);
   
@@ -258,7 +304,9 @@ int main(int argc, char* argv[]) {
   
   
   TH1D* h_chi2 = new TH1D("h_chi2", "h_chi2", 50, 0, 50);
-  TH1D* h_flsTime = new TH1D("h_flsTime", ";Flash time w.r.t. trigger [#mus];Events", 100, 0, 25);
+  TH1D* h_flsTime = new TH1D("h_flsTime", ";Flash time w.r.t. trigger [#mus];Flashes", 175, 0, 25);
+  TH1D* h_flsTime_wcut = new TH1D("h_flsTime_wcut", ";Flash time w.r.t. trigger [#mus];Flashes (> 50PE)", 175, 0, 25);
+  h_flsTime->Sumw2(); h_flsTime_wcut->Sumw2();
   TH1D* h_nslices = new TH1D("h_nslices", ";Number of slices per event;Entries per bin", 15, 0, 15);
   TH1D* h_vtx_resolution = new TH1D("h_nslh_vtx_resolutionices", ";Vertex resolution (2D) [cm];Entries per bin", 300, 0, 500);
   
@@ -267,10 +315,20 @@ int main(int argc, char* argv[]) {
   double hypo_spec_x[32], hypo_spec_y[32];
   double meas_spec_x[32], meas_spec_y[32];
   double numc_spec_x[32], numc_spec_y[32];
+  
   TH1D* h_xdiff = new TH1D("h_xdiff", "h_xdiff", 1000, -100,100);
   TH1D* h_xdiff_others = new TH1D("h_xdiff_others", "h_xdiff_others", 1000, -100,100);
   TH1D* h_zdiff = new TH1D("h_zdiff", "h_zdiff", 1000, 0,1000);
   TH1D* h_zdiff_others = new TH1D("h_zdiff_others", "h_zdiff_others", 1000, 0,1000);
+  std::map<std::string,TH1D*> hmap_xdiff;
+  hmap_xdiff["total"] = new TH1D("h_xdiff_total", ";QLL x - TPC x [cm];", 80, -200,200);
+  hmap_xdiff["signal"] = new TH1D("h_xdiff_signal", ";QLL x - TPC x [cm];", 80, -200,200);
+  hmap_xdiff["background"] = new TH1D("h_xdiff_background", ";QLL x - TPC x [cm];", 80, -200,200);
+  std::map<std::string,TH1D*> hmap_zdiff;
+  hmap_zdiff["total"] = new TH1D("h_zdiff_total", ";Hypo z - Flash z [cm];", 160, -400,400);
+  hmap_zdiff["signal"] = new TH1D("h_zdiff_signal", ";Hypo z - Flash z [cm];", 160, -400,400);
+  hmap_zdiff["background"] = new TH1D("h_zdiff_background", ";Hypo z - Flash z [cm];", 160, -400,400);
+
   
   TH1D* h_vtxcheck_angle_good = new TH1D("h_vtxcheck_angle_good", ";Angle [rad];Entries per bin", 100, 0, 4);
   TH1D* h_vtxcheck_angle_bad  = new TH1D("h_vtxcheck_angle_bad",  ";Angle [rad];Entries per bin",  100, 0, 4);
@@ -410,7 +468,7 @@ int main(int argc, char* argv[]) {
     
     chain_ubxsec->GetEntry(i);
     
-    //SelectionTools * selection = new SelectionTools(at);
+    //SelectionTools * selection = new SelectionTools(t);
     
     //cout << "***** Event " << i << endl;
     
@@ -457,7 +515,10 @@ int main(int argc, char* argv[]) {
     
     bool goodflash = false;
     for (int fls = 0; fls < t->nbeamfls; fls ++){
-      h_flsTime->Fill(t->beamfls_time->at(fls));
+      h_flsTime->Fill(t->beamfls_time->at(fls) - _flashShift);
+      if(t->beamfls_pe->at(fls) > 50.) {
+        h_flsTime_wcut->Fill(t->beamfls_time->at(fls) - _flashShift);
+      }
       if (t->beamfls_time->at(fls) > _beamSpillStarts && t->beamfls_time->at(fls) < _beamSpillEnds) {
         
         flashInBeamSpill = fls;
@@ -586,6 +647,20 @@ int main(int argc, char* argv[]) {
       bool nu_origin = (t->slc_origin->at(slc) == 0 || t->slc_origin->at(slc) == 2);
       
       // PMTs
+      /*
+      if (flashInBeamSpill > -1 && t->slc_flsmatch_score->at(slc) > -1
+          && t->slc_flsmatch_qllx->at(slc)!= -9999 && t->slc_flsmatch_tpcx->at(slc)!=-9999) {
+        hmap_xdiff["total"]->Fill(t->slc_flsmatch_qllx->at(slc) - t->slc_flsmatch_tpcx->at(slc));
+        hmap_zdiff["total"]->Fill(t->slc_flsmatch_hypoz->at(slc) - t->beamfls_z->at(flashInBeamSpill));
+        if ( isSignal && (t->slc_origin->at(slc) == 0 || t->slc_origin->at(slc) == 2)) {
+          hmap_xdiff["signal"]->Fill(t->slc_flsmatch_qllx->at(slc) - t->slc_flsmatch_tpcx->at(slc));
+          hmap_zdiff["signal"]->Fill(t->slc_flsmatch_hypoz->at(slc) - t->beamfls_z->at(flashInBeamSpill));
+        } else {
+          hmap_xdiff["background"]->Fill(t->slc_flsmatch_qllx->at(slc) - t->slc_flsmatch_tpcx->at(slc));
+          hmap_zdiff["background"]->Fill(t->slc_flsmatch_hypoz->at(slc) - t->beamfls_z->at(flashInBeamSpill));
+        }
+      }
+      */
       //   nu
       if ( isSignal && (t->slc_origin->at(slc) == 0 || t->slc_origin->at(slc) == 2) && flashInBeamSpill > -1 && t->slc_flsmatch_score->at(slc) > -1){
         for (int pmt = 0; pmt < 32; pmt++) {
@@ -627,19 +702,6 @@ int main(int argc, char* argv[]) {
         }
       }
       
-      /* CheckVertex
-       if (nu_origin && t->fv == 1 && t->ccnc == 0) {
-       if (t->vtx_resolution <= 10.){
-       h_vtxcheck_angle_good->Fill(t->slc_vtxcheck_angle->at(slc));
-       //if (t->slc_vtxcheck_angle->at(slc) > 3)
-       //std::cout << "Angle is about 180 for a good vertex for event: " << t->event << std::endl;
-       }
-       if (t->vtx_resolution > 10.){
-       h_vtxcheck_angle_bad->Fill(t->slc_vtxcheck_angle->at(slc));
-       //if (t->slc_vtxcheck_angle->at(slc) < 2)
-       //std::cout << "Angle is not 180 for a bad vertex for event: " << t->event << std::endl;
-       }
-       }*/
       // CheckVertex
       if (isSignal && nu_origin) {
         h_vtxcheck_angle_good->Fill(t->slc_vtxcheck_angle->at(slc));
@@ -647,14 +709,14 @@ int main(int argc, char* argv[]) {
         h_vtxcheck_angle_bad->Fill(t->slc_vtxcheck_angle->at(slc));
       }
       
-      
+      // Track chi2
       h_chi2->Fill(t->slc_kalman_chi2->at(slc)/(double)t->slc_kalman_ndof->at(slc));
-      //if (t->slc_kalman_chi2->at(slc)/(double)t->slc_kalman_ndof->at(slc) > 15)
-      //std::cout << "This event (" << event << ") has a track with chi2/ndof = " << slc_kalman_chi2->at(slc)/(double)slc_kalman_ndof->at(slc) << std::endl;
+      
+      // Number of TPCObjects per event
       h_nslices->Fill(t->nslices);
       
-      isBackground.at(slc) = false;
       
+      isBackground.at(slc) = false;
       
       // ACPT
       if (t->slc_acpt_outoftime->at(slc) == 1) {
@@ -667,16 +729,6 @@ int main(int argc, char* argv[]) {
         //isBackground.at(slc) = true;
         //continue;
       }
-      
-      /* Cosmic flash match
-       if (slc_flsmatch_cosmic_t0->at(slc) < 3 || slc_flsmatch_cosmic_t0->at(slc) > 5) {
-       
-       if (slc_flsmatch_cosmic_score->at(slc) > 0.01) {
-       
-       if (slc_flsmatch_cosmic_score->at(slc) > slc_flsmatch_score->at(slc))
-       isBackground.at(slc) = true;
-       }
-       }*/
       
       /* Dead region
        if (slc_nuvtx_closetodeadregion_w->at(slc) == 1 || slc_nuvtx_closetodeadregion_u->at(slc) == 1 || slc_nuvtx_closetodeadregion_v->at(slc) == 1)
@@ -720,10 +772,10 @@ int main(int argc, char* argv[]) {
     if (score_max <= 0.00000001) continue;
     //if (score_max <= 0.001) continue;
     //std::cout << "passed score" << std::endl;
-    if(t->slc_flsmatch_qllx->at(scl_ll_max) - t->slc_flsmatch_tpcx->at(scl_ll_max) > 20) continue;
+    //if(t->slc_flsmatch_qllx->at(scl_ll_max) - t->slc_flsmatch_tpcx->at(scl_ll_max) > 20) continue;
     //std::cout << "passed x diff" << std::endl;
     //if(t->slc_flsmatch_qllx->at(scl_ll_max) - t->slc_flsmatch_tpcx->at(scl_ll_max) < -80) continue;
-    if(t->slc_flsmatch_hypoz->at(scl_ll_max) - t->beamfls_z->at(flashInBeamSpill) > 100) continue;
+    if(abs(t->slc_flsmatch_hypoz->at(scl_ll_max) - t->beamfls_z->at(flashInBeamSpill)) > 100) continue;
     //std::cout << "passed z diff" << std::endl;
     
     if (isSignal && (t->slc_origin->at(scl_ll_max)==0 || t->slc_origin->at(scl_ll_max)==2)) nSignalFlashMatched ++;
@@ -760,6 +812,19 @@ int main(int argc, char* argv[]) {
     hmap_trktheta["total"]->Fill(t->slc_longesttrack_theta->at(scl_ll_max));
     hmap_multpfp["total"]->Fill(t->slc_mult_pfp->at(scl_ll_max));
     hmap_multtracktol["total"]->Fill(t->slc_mult_track_tolerance->at(scl_ll_max));
+    
+    //if (flashInBeamSpill > -1 && t->slc_flsmatch_score->at(scl_ll_max) > -1
+    //    && t->slc_flsmatch_qllx->at(scl_ll_max)!= -9999 && t->slc_flsmatch_tpcx->at(scl_ll_max)!=-9999) {
+      hmap_xdiff["total"]->Fill(t->slc_flsmatch_qllx->at(scl_ll_max) - t->slc_flsmatch_tpcx->at(scl_ll_max));
+      hmap_zdiff["total"]->Fill(t->slc_flsmatch_hypoz->at(scl_ll_max) - t->beamfls_z->at(flashInBeamSpill));
+      if ( isSignal && (t->slc_origin->at(scl_ll_max) == 0 || t->slc_origin->at(scl_ll_max) == 2)) {
+        hmap_xdiff["signal"]->Fill(t->slc_flsmatch_qllx->at(scl_ll_max) - t->slc_flsmatch_tpcx->at(scl_ll_max));
+        hmap_zdiff["signal"]->Fill(t->slc_flsmatch_hypoz->at(scl_ll_max) - t->beamfls_z->at(flashInBeamSpill));
+      } else {
+        hmap_xdiff["background"]->Fill(t->slc_flsmatch_qllx->at(scl_ll_max) - t->slc_flsmatch_tpcx->at(scl_ll_max));
+        hmap_zdiff["background"]->Fill(t->slc_flsmatch_hypoz->at(scl_ll_max) - t->beamfls_z->at(flashInBeamSpill));
+      }
+    //}
     
     bool nu_origin = false;
     if ((t->slc_origin->at(scl_ll_max) == 0 || t->slc_origin->at(scl_ll_max) == 2)) nu_origin = true;
@@ -967,7 +1032,7 @@ int main(int argc, char* argv[]) {
   
   std::cout << "Number of simulated nue CC in FV: " << nue_cc_fv << std::endl;
   std::cout << "Number of selected nue CC in FV (as such):  " << nue_cc_selected << std::endl;
-  std::cout << "Number of selected nue CC in FV (total):  " << nue_cc_selected_total << std::endl;
+  std::cout << "Number of selected nue CC in FV (total):  " << nue_cc_selected_total << std::endl << std::endl;
   //std::cout << "\t Ratio: " << (double)nue_cc_selected/(double)nue_cc_fv << std::endl;
   
   
@@ -1130,10 +1195,7 @@ int main(int argc, char* argv[]) {
   
   TCanvas * final1 = new TCanvas();
   THStack *hs_trklen = new THStack("hs_trklen",";Candidate Track Length [cm]; Selected Events");
-  DrawTHStack(hs_trklen,
-                targetPOT/totalPOT,
-              _breakdownPlots,
-                hmap_trklen);
+  //DrawTHStack(hs_trklen, pot_scaling, _breakdownPlots, hmap_trklen);
   
   
   // Construct legend
@@ -1197,10 +1259,7 @@ int main(int argc, char* argv[]) {
   
   TCanvas * final2 = new TCanvas();
   THStack *hs_trkphi = new THStack("hs_trkphi",";Candidate Track #phi; Selected Events");
-  DrawTHStack(hs_trkphi,
-              targetPOT/totalPOT,
-              _breakdownPlots,
-              hmap_trkphi);
+  //DrawTHStack(hs_trkphi, pot_scaling, _breakdownPlots, hmap_trkphi);
   leg2->Draw();
   DrawPOT(totalPOT);
   
@@ -1212,10 +1271,7 @@ int main(int argc, char* argv[]) {
   
   TCanvas * final3 = new TCanvas();
   THStack *hs_trktheta = new THStack("hs_trktheta",";Candidate Track cos(#theta); Selected Events");
-  DrawTHStack(hs_trktheta,
-              targetPOT/totalPOT,
-              _breakdownPlots,
-              hmap_trktheta);
+  //DrawTHStack(hs_trktheta, pot_scaling, _breakdownPlots, hmap_trktheta);
   leg2->Draw();
   DrawPOT(totalPOT);
   
@@ -1226,10 +1282,7 @@ int main(int argc, char* argv[]) {
   
   TCanvas * final4 = new TCanvas();
   THStack *hs_multpfp = new THStack("hs_multpfp",";PFP Multiplicity; Selected Events");
-  DrawTHStack(hs_multpfp,
-              targetPOT/totalPOT,
-              _breakdownPlots,
-              hmap_multpfp);
+  //DrawTHStack(hs_multpfp, pot_scaling, _breakdownPlots, hmap_multpfp);
   leg2->Draw();
   DrawPOT(totalPOT);
   
@@ -1240,10 +1293,7 @@ int main(int argc, char* argv[]) {
   
   TCanvas * final5 = new TCanvas();
   THStack *hs_multtracktol = new THStack("hs_multtracktol",";Track Multiplicity (5 cm); Selected Events");
-  DrawTHStack(hs_multtracktol,
-              targetPOT/totalPOT,
-              _breakdownPlots,
-              hmap_multtracktol);
+  //DrawTHStack(hs_multtracktol, pot_scaling, _breakdownPlots, hmap_multtracktol);
   leg2->Draw();
   DrawPOT(totalPOT);
   
@@ -1262,6 +1312,17 @@ int main(int argc, char* argv[]) {
   h_nevts->Write();
 
   file_out->WriteObject(&hmap_trklen, "hmap_trklen");
+  file_out->WriteObject(&hmap_trktheta, "hmap_trktheta");
+  file_out->WriteObject(&hmap_trkphi, "hmap_trkphi");
+  file_out->WriteObject(&hmap_multpfp, "hmap_multpfp");
+  file_out->WriteObject(&hmap_multtracktol, "hmap_multtracktol");
+  
+  file_out->WriteObject(&hmap_xdiff, "hmap_xdiff");
+  file_out->WriteObject(&hmap_zdiff, "hmap_zdiff");
+  
+  h_flsTime->Write();
+  h_flsTime_wcut->Write();
+
   file_out->Write();
   
   file_out->Close();
@@ -1278,8 +1339,8 @@ int main(int argc, char* argv[]) {
   double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
   cout << endl << endl << "Computing time: " << elapsed_secs << " seconds = " << elapsed_secs/60. << " minutes." << endl << endl;
   
-  rootapp->Run();
-  rootapp->Terminate(0);
+  //rootapp->Run();
+  //rootapp->Terminate(0);
   
   return 0;
 }
