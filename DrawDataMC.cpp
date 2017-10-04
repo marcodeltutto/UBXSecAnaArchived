@@ -34,38 +34,6 @@ const double targetPOT = 4.95e19;
 using namespace std;
 
 
-//____________________________________________________________________________________________________
-void DrawPOT(double pot)
-{
-  //std::string str = "Simulated POT:" + std::to_string(pot);
-  
-  std::stringstream sstm;
-  sstm << "Simulated POT: " << pot;
-  std::string str = sstm.str();
-  
-  TLatex* pot_latex = new TLatex(.10, .96, str.c_str());
-  pot_latex->SetTextColor(kGray+2);
-  pot_latex->SetNDC();
-  pot_latex->SetTextSize(1/30.);
-  pot_latex->SetTextAlign(10); //left adjusted
-  pot_latex->Draw();
-  
-  
-  std::stringstream sstm2;
-  sstm2 << "Scaled to POT: " << targetPOT;
-  str = sstm2.str();
-  
-  TLatex* pot_latex_2 = new TLatex(.10, .92, str.c_str());
-  pot_latex_2->SetTextFont(62);
-  pot_latex_2->SetTextColor(kGray+2);
-  pot_latex_2->SetNDC();
-  pot_latex_2->SetTextSize(1/30.);
-  pot_latex_2->SetTextAlign(10);//left adjusted
-  pot_latex_2->Draw();
-  
-}
-
-
 
 
 //____________________________________________________________________________________________________
@@ -191,10 +159,20 @@ int main(int argc, char* argv[]) {
   std::map<std::string,TH1D*> hmap_multpfp_mc = *temp_map;
   mc_file->GetObject("hmap_multtracktol", temp_map);
   std::map<std::string,TH1D*> hmap_multtracktol_mc = *temp_map;
+  mc_file->GetObject("hmap_xdiff_b", temp_map);
+  std::map<std::string,TH1D*> hmap_xdiff_b_mc = *temp_map;
+  mc_file->GetObject("hmap_zdiff_b", temp_map);
+  std::map<std::string,TH1D*> hmap_zdiff_b_mc = *temp_map;
   mc_file->GetObject("hmap_xdiff", temp_map);
   std::map<std::string,TH1D*> hmap_xdiff_mc = *temp_map;
   mc_file->GetObject("hmap_zdiff", temp_map);
   std::map<std::string,TH1D*> hmap_zdiff_mc = *temp_map;
+  mc_file->GetObject("hmap_vtxx", temp_map);
+  std::map<std::string,TH1D*> hmap_vtxx_mc = *temp_map;
+  mc_file->GetObject("hmap_vtxy", temp_map);
+  std::map<std::string,TH1D*> hmap_vtxy_mc = *temp_map;
+  mc_file->GetObject("hmap_vtxz", temp_map);
+  std::map<std::string,TH1D*> hmap_vtxz_mc = *temp_map;
   //TH1D* h_trklen_total_mc = (TH1D*)mc_file->Get("h_trklen_total");
   TH1D* h_trklen_total_bnbon = (TH1D*)bnbon_file->Get("h_trklen_total");
   TH1D* h_trklen_total_extbnb = (TH1D*)extbnb_file->Get("h_trklen_total");
@@ -206,11 +184,21 @@ int main(int argc, char* argv[]) {
   TH1D* h_multpfp_total_extbnb = (TH1D*)extbnb_file->Get("h_multpfp_total");
   TH1D* h_multtracktol_total_bnbon = (TH1D*)bnbon_file->Get("h_multtracktol_total");
   TH1D* h_multtracktol_total_extbnb = (TH1D*)extbnb_file->Get("h_multtracktol_total");
+  TH1D* h_xdiff_b_total_bnbon = (TH1D*)bnbon_file->Get("h_xdiff_total_b");
+  TH1D* h_xdiff_b_total_extbnb = (TH1D*)extbnb_file->Get("h_xdiff_total_b");
+  TH1D* h_zdiff_b_total_bnbon = (TH1D*)bnbon_file->Get("h_zdiff_total_b");
+  TH1D* h_zdiff_b_total_extbnb = (TH1D*)extbnb_file->Get("h_zdiff_total_b");
   TH1D* h_xdiff_total_bnbon = (TH1D*)bnbon_file->Get("h_xdiff_total");
   TH1D* h_xdiff_total_extbnb = (TH1D*)extbnb_file->Get("h_xdiff_total");
   TH1D* h_zdiff_total_bnbon = (TH1D*)bnbon_file->Get("h_zdiff_total");
   TH1D* h_zdiff_total_extbnb = (TH1D*)extbnb_file->Get("h_zdiff_total");
-  
+  TH1D* h_vtxx_total_bnbon = (TH1D*)bnbon_file->Get("h_vtxx_total");
+  TH1D* h_vtxx_total_extbnb = (TH1D*)extbnb_file->Get("h_vtxx_total");
+  TH1D* h_vtxy_total_bnbon = (TH1D*)bnbon_file->Get("h_vtxy_total");
+  TH1D* h_vtxy_total_extbnb = (TH1D*)extbnb_file->Get("h_vtxy_total");
+  TH1D* h_vtxz_total_bnbon = (TH1D*)bnbon_file->Get("h_vtxz_total");
+  TH1D* h_vtxz_total_extbnb = (TH1D*)extbnb_file->Get("h_vtxz_total");
+
   
   // *************************************
   // Doing beam-on minus beam-off subctraction
@@ -245,6 +233,18 @@ int main(int argc, char* argv[]) {
   h_multtracktol_data->Sumw2();
   h_multtracktol_data->Add(h_multtracktol_total_extbnb, -1.);
   
+  h_xdiff_b_total_extbnb->Scale(scale_factor_extbnb);
+  h_xdiff_b_total_bnbon->Scale(scale_factor_bnbon);
+  TH1D* h_xdiff_b_data = (TH1D*)h_xdiff_b_total_bnbon->Clone("h_xdiff_b_data");
+  h_xdiff_b_data->Sumw2();
+  h_xdiff_b_data->Add(h_xdiff_b_total_extbnb, -1.);
+  
+  h_zdiff_b_total_extbnb->Scale(scale_factor_extbnb);
+  h_zdiff_b_total_bnbon->Scale(scale_factor_bnbon);
+  TH1D* h_zdiff_b_data = (TH1D*)h_zdiff_b_total_bnbon->Clone("h_zdiff_b_data");
+  h_zdiff_b_data->Sumw2();
+  h_zdiff_b_data->Add(h_zdiff_b_total_extbnb, -1.);
+  
   h_xdiff_total_extbnb->Scale(scale_factor_extbnb);
   h_xdiff_total_bnbon->Scale(scale_factor_bnbon);
   TH1D* h_xdiff_data = (TH1D*)h_xdiff_total_bnbon->Clone("h_xdiff_data");
@@ -257,53 +257,124 @@ int main(int argc, char* argv[]) {
   h_zdiff_data->Sumw2();
   h_zdiff_data->Add(h_zdiff_total_extbnb, -1.);
   
+  h_vtxx_total_extbnb->Scale(scale_factor_extbnb);
+  h_vtxx_total_bnbon->Scale(scale_factor_bnbon);
+  TH1D* h_vtxx_data = (TH1D*)h_vtxx_total_bnbon->Clone("h_vtxx_data");
+  h_vtxx_data->Sumw2();
+  h_vtxx_data->Add(h_vtxx_total_extbnb, -1.);
+  
+  h_vtxy_total_extbnb->Scale(scale_factor_extbnb);
+  h_vtxy_total_bnbon->Scale(scale_factor_bnbon);
+  TH1D* h_vtxy_data = (TH1D*)h_vtxy_total_bnbon->Clone("h_vtxx_data");
+  h_vtxy_data->Sumw2();
+  h_vtxy_data->Add(h_vtxy_total_extbnb, -1.);
+  
+  h_vtxz_total_extbnb->Scale(scale_factor_extbnb);
+  h_vtxz_total_bnbon->Scale(scale_factor_bnbon);
+  TH1D* h_vtxz_data = (TH1D*)h_vtxz_total_bnbon->Clone("h_vtxx_data");
+  h_vtxz_data->Sumw2();
+  h_vtxz_data->Add(h_vtxz_total_extbnb, -1.);
+  
   
   // *************************************
   // Plotting data and MC distribution
   // *************************************
+  TLegend* leg;
   TCanvas* canvas_trklen = new TCanvas();
   THStack *hs_trklen_mc = new THStack("hs_trklen",";Candidate Track Length [cm]; Selected Events");
   std::cout << "before hmap_trklen_mc[\"total\"]->Integral()" << hmap_trklen_mc["total"]->Integral() << std::endl;
-  DrawTHStack(hs_trklen_mc, scale_factor_mc, true, hmap_trklen_mc);
-  h_trklen_data->Draw("E1 same");
+  leg = DrawTHStack(hs_trklen_mc, scale_factor_mc, true, hmap_trklen_mc);
+  DrawDataHisto(h_trklen_data);
+  leg->AddEntry(h_trklen_data,"Data (Beam-on - Beam-off)","lep");
   std::cout << "h_trklen_data->Integral()" << h_trklen_data->Integral() << std::endl;
   std::cout << "after hmap_trklen_mc[\"total\"]->Integral()" << hmap_trklen_mc["total"]->Integral() << std::endl;
+  DrawPOT(bnbon_pot_meas);
 
-  
   TCanvas* canvas_trktheta = new TCanvas();
   THStack *hs_trktheta_mc = new THStack("hs_trktheta",";Candidate Track cos(#theta); Selected Events");
-  DrawTHStack(hs_trktheta_mc, scale_factor_mc, true, hmap_trktheta_mc);
-  h_trktheta_data->Draw("E1 same");
-  
+  leg = DrawTHStack(hs_trktheta_mc, scale_factor_mc, true, hmap_trktheta_mc);
+  DrawDataHisto(h_trktheta_data);
+  leg->AddEntry(h_trktheta_data,"Data (Beam-on - Beam-off)","lep");
+  DrawPOT(bnbon_pot_meas);
+
   TCanvas* canvas_trkphi = new TCanvas();
   THStack *hs_trkphi_mc = new THStack("hs_trkphi",";Candidate Track #phi; Selected Events");
-  DrawTHStack(hs_trkphi_mc, scale_factor_mc, true, hmap_trkphi_mc);
-  h_trkphi_data->Draw("E1 same");
+  leg = DrawTHStack(hs_trkphi_mc, scale_factor_mc, true, hmap_trkphi_mc);
+  DrawDataHisto(h_trkphi_data);
+  leg->AddEntry(h_trkphi_data,"Data (Beam-on - Beam-off)","lep");
+  DrawPOT(bnbon_pot_meas);
   
   TCanvas* canvas_multpfp = new TCanvas();
   THStack *hs_multpfp_mc = new THStack("hs_multpfp",";PFP Multiplicity; Selected Events");
-  DrawTHStack(hs_multpfp_mc, scale_factor_mc, true, hmap_multpfp_mc);
-  h_multpfp_data->Draw("E1 same");
+  leg = DrawTHStack(hs_multpfp_mc, scale_factor_mc, true, hmap_multpfp_mc);
+  DrawDataHisto(h_multpfp_data);
+  leg->AddEntry(h_multpfp_data,"Data (Beam-on - Beam-off)","lep");
+  DrawPOT(bnbon_pot_meas);
   
   TCanvas* canvas_multtracktol = new TCanvas();
   THStack *hs_multtracktol_mc = new THStack("hs_multtracktol",";Track Multiplicity (5 cm); Selected Events");
-  DrawTHStack(hs_multtracktol_mc, scale_factor_mc, true, hmap_multtracktol_mc);
-  h_multtracktol_data->Draw("E1 same");
+  leg = DrawTHStack(hs_multtracktol_mc, scale_factor_mc, true, hmap_multtracktol_mc);
+  DrawDataHisto(h_multtracktol_data);
+  leg->AddEntry(h_multtracktol_data,"Data (Beam-on - Beam-off)","lep");
+  DrawPOT(bnbon_pot_meas);
+  
+  TCanvas* canvas_xdiff_b = new TCanvas();
+  THStack *hs_xdiff_b_mc = new THStack("hs_xdiff_b",";QLL x - TPC x [cm]; TPCObjects (Before Selection)");
+  leg = DrawTHStack2(hs_xdiff_b_mc, scale_factor_mc, true, hmap_xdiff_b_mc);
+  DrawDataHisto(h_xdiff_b_data);
+  leg->AddEntry(h_xdiff_b_data,"Data (Beam-on - Beam-off)","lep");
+  DrawPOT(bnbon_pot_meas);
+  
+  TCanvas* canvas_b_zdiff = new TCanvas();
+  THStack *hs_zdiff_b_mc = new THStack("hs_zdiff_b",";Hypo z - Flash z [cm]; TPCObjects (Before Selection)");
+  leg = DrawTHStack2(hs_zdiff_b_mc, scale_factor_mc, true, hmap_zdiff_b_mc);
+  DrawDataHisto(h_zdiff_b_data);
+  leg->AddEntry(h_zdiff_b_data,"Data (Beam-on - Beam-off)","lep");
+  DrawPOT(bnbon_pot_meas);
   
   TCanvas* canvas_xdiff = new TCanvas();
-  THStack *hs_xdiff_mc = new THStack("hs_xdiff",";xdiff; TPCObjects");
-  DrawTHStack2(hs_xdiff_mc, scale_factor_mc, true, hmap_xdiff_mc);
-  h_xdiff_data->Draw("E1 same");
+  THStack *hs_xdiff_mc = new THStack("hs_xdiff",";QLL x - TPC x [cm]; Selected Events");
+  leg = DrawTHStack2(hs_xdiff_mc, scale_factor_mc, true, hmap_xdiff_mc);
+  DrawDataHisto(h_xdiff_data);
+  leg->AddEntry(h_xdiff_data,"Data (Beam-on - Beam-off)","lep");
   std::cout << "h_xdiff_data->Integral()" << h_xdiff_data->Integral() << std::endl;
   std::cout << "hmap_xdiff_mc[\"total\"]->Integral()" << hmap_xdiff_mc["total"]->Integral() << std::endl;
+  DrawPOT(bnbon_pot_meas);
 
   TCanvas* canvas_zdiff = new TCanvas();
-  THStack *hs_zdiff_mc = new THStack("hs_zdiff",";zdiff; TPCObjects");
-  DrawTHStack2(hs_zdiff_mc, scale_factor_mc, true, hmap_zdiff_mc);
-  h_zdiff_data->Draw("E1 same");
+  THStack *hs_zdiff_mc = new THStack("hs_zdiff",";Hypo z - Flash z [cm]; Selected Events");
+  leg = DrawTHStack2(hs_zdiff_mc, scale_factor_mc, true, hmap_zdiff_mc);
+  DrawDataHisto(h_zdiff_data);
+  leg->AddEntry(h_zdiff_data,"Data (Beam-on - Beam-off)","lep");
   std::cout << "h_zdiff_data->Integral()" << h_zdiff_data->Integral() << std::endl;
   std::cout << "hmap_zdiff_mc[\"total\"]->Integral()" << hmap_zdiff_mc["total"]->Integral() << std::endl;
+  DrawPOT(bnbon_pot_meas);
 
+  TCanvas* canvas_vtxx = new TCanvas();
+  THStack *hs_vtxx_mc = new THStack("hs_vtxx",";Candidate Neutrino Vertex X [cm]; Selected Events");
+  leg = DrawTHStack2(hs_vtxx_mc, scale_factor_mc, true, hmap_vtxx_mc);
+  DrawDataHisto(h_vtxx_data);
+  hs_vtxx_mc->SetMaximum(600);
+  leg->AddEntry(h_vtxx_data,"Data (Beam-on - Beam-off)","lep");
+  DrawPOT(bnbon_pot_meas);
+  
+  TCanvas* canvas_vtxy = new TCanvas();
+  THStack *hs_vtxy_mc = new THStack("hs_vtxy",";Candidate Neutrino Vertex Y [cm]; Selected Events");
+  leg = DrawTHStack2(hs_vtxy_mc, scale_factor_mc, true, hmap_vtxy_mc);
+  hs_vtxy_mc->SetMaximum(650);
+  DrawDataHisto(h_vtxy_data);
+  leg->AddEntry(h_vtxy_data,"Data (Beam-on - Beam-off)","lep");
+  DrawPOT(bnbon_pot_meas);
+  
+  TCanvas* canvas_vtxz = new TCanvas();
+  THStack *hs_vtxz_mc = new THStack("hs_vtxz",";Candidate Neutrino Vertex Z [cm]; Selected Events");
+  leg = DrawTHStack2(hs_vtxz_mc, scale_factor_mc, true, hmap_vtxz_mc);
+  //h_vtxz_data->Draw("E1 same");
+  DrawDataHisto(h_vtxz_data);
+  hs_vtxz_mc->SetMaximum(900);
+  leg->AddEntry(h_vtxz_data,"Data (Beam-on - Beam-off)","lep");
+  DrawPOT(bnbon_pot_meas);
+  
   
   // *************************************
   // Other data/MC distributions
@@ -316,18 +387,33 @@ int main(int argc, char* argv[]) {
   TH1D* h_flsTime_data = (TH1D*)h_flsTime_bnbon->Clone("h_flsTime_data");
   h_flsTime_data->Sumw2();
   h_flsTime_data->Add(h_flsTime_extbnb, -1.);
-  TCanvas* canvas_flsTime = new TCanvas();
+  
+  new TCanvas();
   h_flsTime_mc->Draw("histo");
   h_flsTime_data->SetLineColor(kRed);
-  h_flsTime_data->Draw("E1 same");
+  h_flsTime_data->SetMarkerColor(kRed);
+  DrawDataHisto(h_flsTime_data);
+  TLegend* leg2;
+  leg2 = new TLegend(0.13,0.69,0.45,0.87,NULL,"brNDC");
+  leg2->AddEntry(h_flsTime_mc,"MC BNB+COSMIC","l");
+  leg2->AddEntry(h_flsTime_data,"Data (Beam-on - Beam-off)","lep");
+  leg2->Draw();
+  DrawPOT(bnbon_pot_meas);
+
   new TCanvas();
   h_flsTime_mc->SetLineColor(kBlack);
-  h_flsTime_bnbon->SetLineColor(kBlue);
-  h_flsTime_extbnb->SetLineColor(kRed);
+  h_flsTime_bnbon->SetLineColor(kRed);
+  h_flsTime_extbnb->SetLineColor(kBlue);
   h_flsTime_mc->Draw("histo");
-  h_flsTime_bnbon->Draw("E1 same");
-  h_flsTime_extbnb->Draw("E1 same");
-
+  h_flsTime_bnbon->Draw("histo same");
+  h_flsTime_extbnb->Draw("histo same");
+  TLegend* leg3;
+  leg3 = new TLegend(0.13,0.69,0.45,0.87,NULL,"brNDC");
+  leg3->AddEntry(h_flsTime_mc,"MC BNB+COSMIC","l");
+  leg3->AddEntry(h_flsTime_bnbon,"DATA BNBON","l");
+  leg3->AddEntry(h_flsTime_extbnb,"DATA EXTBNB","l");
+  leg3->Draw();
+  DrawPOT(bnbon_pot_meas);
 
   
   // Computing time

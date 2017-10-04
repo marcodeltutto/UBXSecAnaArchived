@@ -21,11 +21,13 @@
 #include <TString.h>
 #include <TROOT.h>
 #include <TStyle.h>
+#include <TH1D.h>
 
 #include "AnaTree.h"
 #include "Spectrum.hpp"
 #include "Spectrum2D.hpp"
 #include "PlottingTools.h"
+
 
 //#include "PlotHandler.hpp"
 //#include "SelectionTools.hpp"
@@ -55,7 +57,7 @@ void DrawProgressBar(double progress, double barWidth) {
 }
 
 //____________________________________________________________________________________________________
-void DrawPOT(double pot)
+void DrawPOT2(double pot)
 {
   //std::string str = "Simulated POT:" + std::to_string(pot);
   
@@ -304,8 +306,8 @@ int main(int argc, char* argv[]) {
   
   
   TH1D* h_chi2 = new TH1D("h_chi2", "h_chi2", 50, 0, 50);
-  TH1D* h_flsTime = new TH1D("h_flsTime", ";Flash time w.r.t. trigger [#mus];Flashes", 175, 0, 25);
-  TH1D* h_flsTime_wcut = new TH1D("h_flsTime_wcut", ";Flash time w.r.t. trigger [#mus];Flashes (> 50PE)", 175, 0, 25);
+  TH1D* h_flsTime = new TH1D("h_flsTime", ";Flash time w.r.t. trigger [#mus];Flashes", 125, 0, 25);
+  TH1D* h_flsTime_wcut = new TH1D("h_flsTime_wcut", ";Flash time w.r.t. trigger [#mus];Flashes (> 50PE)", 125, 0, 25);
   h_flsTime->Sumw2(); h_flsTime_wcut->Sumw2();
   TH1D* h_nslices = new TH1D("h_nslices", ";Number of slices per event;Entries per bin", 15, 0, 15);
   TH1D* h_vtx_resolution = new TH1D("h_nslh_vtx_resolutionices", ";Vertex resolution (2D) [cm];Entries per bin", 300, 0, 500);
@@ -320,6 +322,16 @@ int main(int argc, char* argv[]) {
   TH1D* h_xdiff_others = new TH1D("h_xdiff_others", "h_xdiff_others", 1000, -100,100);
   TH1D* h_zdiff = new TH1D("h_zdiff", "h_zdiff", 1000, 0,1000);
   TH1D* h_zdiff_others = new TH1D("h_zdiff_others", "h_zdiff_others", 1000, 0,1000);
+  // Before selection
+  std::map<std::string,TH1D*> hmap_xdiff_b;
+  hmap_xdiff_b["total"] = new TH1D("h_xdiff_total_b", ";QLL x - TPC x [cm];", 80, -200,200);
+  hmap_xdiff_b["signal"] = new TH1D("h_xdiff_signal_b", ";QLL x - TPC x [cm];", 80, -200,200);
+  hmap_xdiff_b["background"] = new TH1D("h_xdiff_background_b", ";QLL x - TPC x [cm];", 80, -200,200);
+  std::map<std::string,TH1D*> hmap_zdiff_b;
+  hmap_zdiff_b["total"] = new TH1D("h_zdiff_total_b", ";Hypo z - Flash z [cm];", 160, -400,400);
+  hmap_zdiff_b["signal"] = new TH1D("h_zdiff_signal_b", ";Hypo z - Flash z [cm];", 160, -400,400);
+  hmap_zdiff_b["background"] = new TH1D("h_zdiff_background_b", ";Hypo z - Flash z [cm];", 160, -400,400);
+  // After selection
   std::map<std::string,TH1D*> hmap_xdiff;
   hmap_xdiff["total"] = new TH1D("h_xdiff_total", ";QLL x - TPC x [cm];", 80, -200,200);
   hmap_xdiff["signal"] = new TH1D("h_xdiff_signal", ";QLL x - TPC x [cm];", 80, -200,200);
@@ -450,7 +462,23 @@ int main(int argc, char* argv[]) {
   hmap_multtracktol["nc_other"] = new TH1D("h_multtracktol_nc_other", "; Track Multiplicity (5 cm);", 10, 0, 10);
   hmap_multtracktol["signal_stopmu"] = new TH1D("h_multtracktol_signal_stopmu", "; Track Multiplicity (5 cm);", 10, 0, 10);
   hmap_multtracktol["signal_nostopmu"] = new TH1D("h_multtracktol_signal_nostopmu", "; Track Multiplicity (5 cm);", 10, 0, 10);
+  
+  std::map<std::string,TH1D*> hmap_vtxx;
+  hmap_vtxx["total"] = new TH1D("h_vtxx_total", ";Candidate Neutrino Vertex X [cm];", 40, 0, 275);
+  hmap_vtxx["signal"] = new TH1D("h_vtxx_signal", ";Candidate Neutrino Vertex X [cm];", 40, 0,275);
+  hmap_vtxx["background"] = new TH1D("h_vtxx_background", ";Candidate Neutrino Vertex X [cm];", 40, 0,275);
+  
+  std::map<std::string,TH1D*> hmap_vtxy;
+  hmap_vtxy["total"] = new TH1D("h_vtxy_total", ";Candidate Neutrino Vertex Y [cm];", 40, -125,125);
+  hmap_vtxy["signal"] = new TH1D("h_vtxy_signal", ";Candidate Neutrino Vertex Y [cm];", 40, -125,125);
+  hmap_vtxy["background"] = new TH1D("h_vtxy_background", ";Candidate Neutrino Vertex Y [cm];", 40, -125,125);
+  
+  std::map<std::string,TH1D*> hmap_vtxz;
+  hmap_vtxz["total"] = new TH1D("h_vtxz_total", ";Candidate Neutrino Vertex Z [cm];", 50, 0,1050);
+  hmap_vtxz["signal"] = new TH1D("h_vtxz_signal", ";Candidate Neutrino Vertex Z [cm];", 50, 0,1050);
+  hmap_vtxz["background"] = new TH1D("h_vtxz_background", ";Candidate Neutrino Vertex Z [cm];", 50, 0,1050);
 
+  
   TH1D* h_pot = new TH1D("h_pot", "First bin contains number of POT (not valid on data)", 1, 0, 1);
   TH1D* h_nevts = new TH1D("h_nevts", "First bin contains number of events", 1, 0, 1);
 
@@ -647,20 +675,20 @@ int main(int argc, char* argv[]) {
       bool nu_origin = (t->slc_origin->at(slc) == 0 || t->slc_origin->at(slc) == 2);
       
       // PMTs
-      /*
+      
       if (flashInBeamSpill > -1 && t->slc_flsmatch_score->at(slc) > -1
           && t->slc_flsmatch_qllx->at(slc)!= -9999 && t->slc_flsmatch_tpcx->at(slc)!=-9999) {
-        hmap_xdiff["total"]->Fill(t->slc_flsmatch_qllx->at(slc) - t->slc_flsmatch_tpcx->at(slc));
-        hmap_zdiff["total"]->Fill(t->slc_flsmatch_hypoz->at(slc) - t->beamfls_z->at(flashInBeamSpill));
+        hmap_xdiff_b["total"]->Fill(t->slc_flsmatch_qllx->at(slc) - t->slc_flsmatch_tpcx->at(slc));
+        hmap_zdiff_b["total"]->Fill(t->slc_flsmatch_hypoz->at(slc) - t->beamfls_z->at(flashInBeamSpill));
         if ( isSignal && (t->slc_origin->at(slc) == 0 || t->slc_origin->at(slc) == 2)) {
-          hmap_xdiff["signal"]->Fill(t->slc_flsmatch_qllx->at(slc) - t->slc_flsmatch_tpcx->at(slc));
-          hmap_zdiff["signal"]->Fill(t->slc_flsmatch_hypoz->at(slc) - t->beamfls_z->at(flashInBeamSpill));
+          hmap_xdiff_b["signal"]->Fill(t->slc_flsmatch_qllx->at(slc) - t->slc_flsmatch_tpcx->at(slc));
+          hmap_zdiff_b["signal"]->Fill(t->slc_flsmatch_hypoz->at(slc) - t->beamfls_z->at(flashInBeamSpill));
         } else {
-          hmap_xdiff["background"]->Fill(t->slc_flsmatch_qllx->at(slc) - t->slc_flsmatch_tpcx->at(slc));
-          hmap_zdiff["background"]->Fill(t->slc_flsmatch_hypoz->at(slc) - t->beamfls_z->at(flashInBeamSpill));
+          hmap_xdiff_b["background"]->Fill(t->slc_flsmatch_qllx->at(slc) - t->slc_flsmatch_tpcx->at(slc));
+          hmap_zdiff_b["background"]->Fill(t->slc_flsmatch_hypoz->at(slc) - t->beamfls_z->at(flashInBeamSpill));
         }
       }
-      */
+      
       //   nu
       if ( isSignal && (t->slc_origin->at(slc) == 0 || t->slc_origin->at(slc) == 2) && flashInBeamSpill > -1 && t->slc_flsmatch_score->at(slc) > -1){
         for (int pmt = 0; pmt < 32; pmt++) {
@@ -772,7 +800,7 @@ int main(int argc, char* argv[]) {
     if (score_max <= 0.00000001) continue;
     //if (score_max <= 0.001) continue;
     //std::cout << "passed score" << std::endl;
-    //if(t->slc_flsmatch_qllx->at(scl_ll_max) - t->slc_flsmatch_tpcx->at(scl_ll_max) > 20) continue;
+    if(t->slc_flsmatch_qllx->at(scl_ll_max) - t->slc_flsmatch_tpcx->at(scl_ll_max) > 50) continue;
     //std::cout << "passed x diff" << std::endl;
     //if(t->slc_flsmatch_qllx->at(scl_ll_max) - t->slc_flsmatch_tpcx->at(scl_ll_max) < -80) continue;
     if(abs(t->slc_flsmatch_hypoz->at(scl_ll_max) - t->beamfls_z->at(flashInBeamSpill)) > 100) continue;
@@ -813,18 +841,33 @@ int main(int argc, char* argv[]) {
     hmap_multpfp["total"]->Fill(t->slc_mult_pfp->at(scl_ll_max));
     hmap_multtracktol["total"]->Fill(t->slc_mult_track_tolerance->at(scl_ll_max));
     
-    //if (flashInBeamSpill > -1 && t->slc_flsmatch_score->at(scl_ll_max) > -1
-    //    && t->slc_flsmatch_qllx->at(scl_ll_max)!= -9999 && t->slc_flsmatch_tpcx->at(scl_ll_max)!=-9999) {
-      hmap_xdiff["total"]->Fill(t->slc_flsmatch_qllx->at(scl_ll_max) - t->slc_flsmatch_tpcx->at(scl_ll_max));
-      hmap_zdiff["total"]->Fill(t->slc_flsmatch_hypoz->at(scl_ll_max) - t->beamfls_z->at(flashInBeamSpill));
-      if ( isSignal && (t->slc_origin->at(scl_ll_max) == 0 || t->slc_origin->at(scl_ll_max) == 2)) {
-        hmap_xdiff["signal"]->Fill(t->slc_flsmatch_qllx->at(scl_ll_max) - t->slc_flsmatch_tpcx->at(scl_ll_max));
-        hmap_zdiff["signal"]->Fill(t->slc_flsmatch_hypoz->at(scl_ll_max) - t->beamfls_z->at(flashInBeamSpill));
-      } else {
-        hmap_xdiff["background"]->Fill(t->slc_flsmatch_qllx->at(scl_ll_max) - t->slc_flsmatch_tpcx->at(scl_ll_max));
-        hmap_zdiff["background"]->Fill(t->slc_flsmatch_hypoz->at(scl_ll_max) - t->beamfls_z->at(flashInBeamSpill));
-      }
-    //}
+    
+    hmap_xdiff["total"]->Fill(t->slc_flsmatch_qllx->at(scl_ll_max) - t->slc_flsmatch_tpcx->at(scl_ll_max));
+    hmap_zdiff["total"]->Fill(t->slc_flsmatch_hypoz->at(scl_ll_max) - t->beamfls_z->at(flashInBeamSpill));
+    
+    hmap_vtxx["total"]->Fill(t->slc_nuvtx_x->at(scl_ll_max));
+    hmap_vtxy["total"]->Fill(t->slc_nuvtx_y->at(scl_ll_max));
+    hmap_vtxz["total"]->Fill(t->slc_nuvtx_z->at(scl_ll_max));
+    
+    // SIGNAL
+    if ( isSignal && (t->slc_origin->at(scl_ll_max) == 0 || t->slc_origin->at(scl_ll_max) == 2)) {
+      hmap_xdiff["signal"]->Fill(t->slc_flsmatch_qllx->at(scl_ll_max) - t->slc_flsmatch_tpcx->at(scl_ll_max));
+      hmap_zdiff["signal"]->Fill(t->slc_flsmatch_hypoz->at(scl_ll_max) - t->beamfls_z->at(flashInBeamSpill));
+      
+      hmap_vtxx["signal"]->Fill(t->slc_nuvtx_x->at(scl_ll_max));
+      hmap_vtxy["signal"]->Fill(t->slc_nuvtx_y->at(scl_ll_max));
+      hmap_vtxz["signal"]->Fill(t->slc_nuvtx_z->at(scl_ll_max));
+    }
+    // BACKGROUND
+    else {
+      hmap_xdiff["background"]->Fill(t->slc_flsmatch_qllx->at(scl_ll_max) - t->slc_flsmatch_tpcx->at(scl_ll_max));
+      hmap_zdiff["background"]->Fill(t->slc_flsmatch_hypoz->at(scl_ll_max) - t->beamfls_z->at(flashInBeamSpill));
+      
+      hmap_vtxx["background"]->Fill(t->slc_nuvtx_x->at(scl_ll_max));
+      hmap_vtxy["background"]->Fill(t->slc_nuvtx_y->at(scl_ll_max));
+      hmap_vtxz["background"]->Fill(t->slc_nuvtx_z->at(scl_ll_max));
+    }
+    
     
     bool nu_origin = false;
     if ((t->slc_origin->at(scl_ll_max) == 0 || t->slc_origin->at(scl_ll_max) == 2)) nu_origin = true;
@@ -1250,7 +1293,7 @@ int main(int argc, char* argv[]) {
   }
   leg2->AddEntry(hmap_trklen["total"],"MC Stat Unc.","f");
   leg2->Draw();
-  DrawPOT(totalPOT);
+  DrawPOT2(totalPOT);
   
   temp2 = "./output/trklen";
   final1->SaveAs(temp2 + ".pdf");
@@ -1261,7 +1304,7 @@ int main(int argc, char* argv[]) {
   THStack *hs_trkphi = new THStack("hs_trkphi",";Candidate Track #phi; Selected Events");
   //DrawTHStack(hs_trkphi, pot_scaling, _breakdownPlots, hmap_trkphi);
   leg2->Draw();
-  DrawPOT(totalPOT);
+  DrawPOT2(totalPOT);
   
   temp2 = "./output/trkphi";
   final2->SaveAs(temp2 + ".pdf");
@@ -1273,7 +1316,7 @@ int main(int argc, char* argv[]) {
   THStack *hs_trktheta = new THStack("hs_trktheta",";Candidate Track cos(#theta); Selected Events");
   //DrawTHStack(hs_trktheta, pot_scaling, _breakdownPlots, hmap_trktheta);
   leg2->Draw();
-  DrawPOT(totalPOT);
+  DrawPOT2(totalPOT);
   
   temp2 = "./output/trktheta";
   final3->SaveAs(temp2 + ".pdf");
@@ -1284,7 +1327,7 @@ int main(int argc, char* argv[]) {
   THStack *hs_multpfp = new THStack("hs_multpfp",";PFP Multiplicity; Selected Events");
   //DrawTHStack(hs_multpfp, pot_scaling, _breakdownPlots, hmap_multpfp);
   leg2->Draw();
-  DrawPOT(totalPOT);
+  DrawPOT2(totalPOT);
   
   temp2 = "./output/multpfp";
   final4->SaveAs(temp2 + ".pdf");
@@ -1295,7 +1338,7 @@ int main(int argc, char* argv[]) {
   THStack *hs_multtracktol = new THStack("hs_multtracktol",";Track Multiplicity (5 cm); Selected Events");
   //DrawTHStack(hs_multtracktol, pot_scaling, _breakdownPlots, hmap_multtracktol);
   leg2->Draw();
-  DrawPOT(totalPOT);
+  DrawPOT2(totalPOT);
   
   temp2 = "./output/multtracktol";
   final5->SaveAs(temp2 + ".pdf");
@@ -1317,9 +1360,15 @@ int main(int argc, char* argv[]) {
   file_out->WriteObject(&hmap_multpfp, "hmap_multpfp");
   file_out->WriteObject(&hmap_multtracktol, "hmap_multtracktol");
   
+  file_out->WriteObject(&hmap_xdiff_b, "hmap_xdiff_b");
+  file_out->WriteObject(&hmap_zdiff_b, "hmap_zdiff_b");
   file_out->WriteObject(&hmap_xdiff, "hmap_xdiff");
   file_out->WriteObject(&hmap_zdiff, "hmap_zdiff");
   
+  file_out->WriteObject(&hmap_vtxx, "hmap_vtxx");
+  file_out->WriteObject(&hmap_vtxy, "hmap_vtxy");
+  file_out->WriteObject(&hmap_vtxz, "hmap_vtxz");
+
   h_flsTime->Write();
   h_flsTime_wcut->Write();
 

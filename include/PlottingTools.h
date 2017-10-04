@@ -1,6 +1,24 @@
 
+void DrawPOT(double pot) {
+  
+  std::stringstream sstm2;
+  sstm2 << "Accumulated POT: " << pot;
+  std::string str = sstm2.str();
+  
+  TLatex* pot_latex_2 = new TLatex(.10, .92, str.c_str());
+  pot_latex_2->SetTextFont(62);
+  pot_latex_2->SetTextColor(kGray+2);
+  pot_latex_2->SetNDC();
+  pot_latex_2->SetTextSize(1/30.);
+  pot_latex_2->SetTextAlign(10);//left adjusted
+  pot_latex_2->Draw();
+  
+}
 
-void DrawTHStack(THStack *hs_trklen,
+
+//**********************************************************
+
+TLegend* DrawTHStack(THStack *hs_trklen,
                    double pot_scaling,
                    bool _breakdownPlots,
                    std::map<std::string,TH1D*> themap){
@@ -132,6 +150,8 @@ void DrawTHStack(THStack *hs_trklen,
   }
   leg2->AddEntry(themap["total"],"MC Stat Unc.","f");
   leg2->Draw();
+  
+  return leg2;
 
 }
 
@@ -140,7 +160,7 @@ void DrawTHStack(THStack *hs_trklen,
 
 
 //**********************************************************
-void DrawTHStack2(THStack *hs_trklen,
+TLegend* DrawTHStack2(THStack *hs_trklen,
                   double pot_scaling,
                   bool _breakdownPlots,
                   std::map<std::string,TH1D*> themap){
@@ -170,7 +190,7 @@ void DrawTHStack2(THStack *hs_trklen,
   
   
   TLegend* leg2;
-  leg2 = new TLegend(0.56,0.54,0.82,0.82,NULL,"brNDC");
+  leg2 = new TLegend(0.13,0.69,0.45,0.87,NULL,"brNDC");
 
   std::stringstream sstm;
   
@@ -184,6 +204,17 @@ void DrawTHStack2(THStack *hs_trklen,
   
   leg2->AddEntry(themap["total"],"MC Stat Unc.","f");
   leg2->Draw();
+  
+  return leg2;
+
+}
+
+void DrawDataHisto(TH1D* histo) {
+
+  histo->SetMarkerStyle(kFullCircle);
+  histo->SetMarkerSize(0.6);
+
+  histo->Draw("E1 same");
   
 }
 
