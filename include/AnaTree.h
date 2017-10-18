@@ -1,8 +1,8 @@
 //////////////////////////////////////////////////////////
 // This class has been automatically generated on
-// Wed Aug 30 15:52:39 2017 by ROOT version 6.06/06
+// Wed Oct 11 08:08:37 2017 by ROOT version 6.06/06
 // from TTree tree/
-// found on file: ../files/ubxsec_output_mc_10.root
+// found on file: ../files/mcc8.3_v1.0.2/ubxsec_output_mc_bnbcosmic_mcc8.3_v1.0.2.root
 //////////////////////////////////////////////////////////
 
 #ifndef AnaTree_h
@@ -13,9 +13,6 @@
 #include <TFile.h>
 
 // Header file for the classes stored in the TTree if any.
-#include "vector"
-#include "vector"
-#include "vector"
 #include "vector"
 
 using namespace std;
@@ -45,19 +42,7 @@ public :
    Int_t           nupdg;
    Bool_t          is_signal;
    Double_t        nu_e;
-   Double_t        recon_muon_start_x;
-   Double_t        recon_muon_start_y;
-   Double_t        recon_muon_start_z;
-   Double_t        recon_muon_end_x;
-   Double_t        recon_muon_end_y;
-   Double_t        recon_muon_end_z;
-   Double_t        mc_muon_start_x;
-   Double_t        mc_muon_start_y;
-   Double_t        mc_muon_start_z;
-   Double_t        mc_muon_end_x;
-   Double_t        mc_muon_end_y;
-   Double_t        mc_muon_end_z;
-   Int_t           mc_muon_contained;
+   Bool_t          mc_muon_contained;
    Int_t           is_swtriggered;
    Double_t        vtx_resolution;
    Int_t           nslices;
@@ -84,6 +69,10 @@ public :
    vector<double>  *slc_longesttrack_phi;
    vector<double>  *slc_longesttrack_theta;
    vector<bool>    *slc_longesttrack_iscontained;
+   vector<bool>    *slc_muoncandidate_exists;
+   vector<double>  *slc_muoncandidate_length;
+   vector<double>  *slc_muoncandidate_phi;
+   vector<double>  *slc_muoncandidate_theta;
    vector<int>     *slc_acpt_outoftime;
    vector<int>     *slc_crosses_top_boundary;
    vector<int>     *slc_nuvtx_closetodeadregion_u;
@@ -103,6 +92,7 @@ public :
    vector<int>     *slc_mult_track;
    vector<int>     *slc_mult_shower;
    vector<int>     *slc_mult_track_tolerance;
+   vector<bool>    *slc_geocosmictag;
    Int_t           nbeamfls;
    vector<double>  *beamfls_time;
    vector<double>  *beamfls_pe;
@@ -145,18 +135,6 @@ public :
    TBranch        *b_nupdg;   //!
    TBranch        *b_is_signal;   //!
    TBranch        *b_nu_e;   //!
-   TBranch        *b_recon_muon_start_x;   //!
-   TBranch        *b_recon_muon_start_y;   //!
-   TBranch        *b_recon_muon_start_z;   //!
-   TBranch        *b_recon_muon_end_x;   //!
-   TBranch        *b_recon_muon_end_y;   //!
-   TBranch        *b_recon_muon_end_z;   //!
-   TBranch        *b_mc_muon_start_x;   //!
-   TBranch        *b_mc_muon_start_y;   //!
-   TBranch        *b_mc_muon_start_z;   //!
-   TBranch        *b_mc_muon_end_x;   //!
-   TBranch        *b_mc_muon_end_y;   //!
-   TBranch        *b_mc_muon_end_z;   //!
    TBranch        *b_mc_muon_contained;   //!
    TBranch        *b_is_swtriggered;   //!
    TBranch        *b_vtx_resolution;   //!
@@ -184,6 +162,10 @@ public :
    TBranch        *b_slc_longesttrack_phi;   //!
    TBranch        *b_slc_longesttrack_theta;   //!
    TBranch        *b_slc_longesttrack_iscontained;   //!
+   TBranch        *b_slc_muoncandidate_exists;   //!
+   TBranch        *b_slc_muoncandidate_length;   //!
+   TBranch        *b_slc_muoncandidate_phi;   //!
+   TBranch        *b_slc_muoncandidate_theta;   //!
    TBranch        *b_slc_acpt_outoftime;   //!
    TBranch        *b_slc_crosses_top_boundary;   //!
    TBranch        *b_slc_nuvtx_closetodeadregion_u;   //!
@@ -203,6 +185,7 @@ public :
    TBranch        *b_slc_mult_track;   //!
    TBranch        *b_slc_mult_shower;   //!
    TBranch        *b_slc_mult_track_tolerance;   //!
+   TBranch        *b_slc_geocosmictag;   //!
    TBranch        *b_nbeamfls;   //!
    TBranch        *b_beamfls_time;   //!
    TBranch        *b_beamfls_pe;   //!
@@ -246,11 +229,11 @@ AnaTree::AnaTree(TTree *tree) : fChain(0)
 // if parameter tree is not specified (or zero), connect the file
 // used to generate this class and read the Tree.
    if (tree == 0) {
-      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("../files/ubxsec_output_mc_10.root");
+      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("../files/mcc8.3_v1.0.2/ubxsec_output_mc_bnbcosmic_mcc8.3_v1.0.2.root");
       if (!f || !f->IsOpen()) {
-         f = new TFile("../files/ubxsec_output_mc_10.root");
+         f = new TFile("../files/mcc8.3_v1.0.2/ubxsec_output_mc_bnbcosmic_mcc8.3_v1.0.2.root");
       }
-      TDirectory * dir = (TDirectory*)f->Get("../files/ubxsec_output_mc_10.root:/UBXSec");
+      TDirectory * dir = (TDirectory*)f->Get("../files/mcc8.3_v1.0.2/ubxsec_output_mc_bnbcosmic_mcc8.3_v1.0.2.root:/UBXSec");
       dir->GetObject("tree",tree);
 
    }
@@ -316,6 +299,10 @@ void AnaTree::Init(TTree *tree)
    slc_longesttrack_phi = 0;
    slc_longesttrack_theta = 0;
    slc_longesttrack_iscontained = 0;
+   slc_muoncandidate_exists = 0;
+   slc_muoncandidate_length = 0;
+   slc_muoncandidate_phi = 0;
+   slc_muoncandidate_theta = 0;
    slc_acpt_outoftime = 0;
    slc_crosses_top_boundary = 0;
    slc_nuvtx_closetodeadregion_u = 0;
@@ -335,6 +322,7 @@ void AnaTree::Init(TTree *tree)
    slc_mult_track = 0;
    slc_mult_shower = 0;
    slc_mult_track_tolerance = 0;
+   slc_geocosmictag = 0;
    beamfls_time = 0;
    beamfls_pe = 0;
    beamfls_z = 0;
@@ -377,18 +365,6 @@ void AnaTree::Init(TTree *tree)
    fChain->SetBranchAddress("nupdg", &nupdg, &b_nupdg);
    fChain->SetBranchAddress("is_signal", &is_signal, &b_is_signal);
    fChain->SetBranchAddress("nu_e", &nu_e, &b_nu_e);
-   fChain->SetBranchAddress("recon_muon_start_x", &recon_muon_start_x, &b_recon_muon_start_x);
-   fChain->SetBranchAddress("recon_muon_start_y", &recon_muon_start_y, &b_recon_muon_start_y);
-   fChain->SetBranchAddress("recon_muon_start_z", &recon_muon_start_z, &b_recon_muon_start_z);
-   fChain->SetBranchAddress("recon_muon_end_x", &recon_muon_end_x, &b_recon_muon_end_x);
-   fChain->SetBranchAddress("recon_muon_end_y", &recon_muon_end_y, &b_recon_muon_end_y);
-   fChain->SetBranchAddress("recon_muon_end_z", &recon_muon_end_z, &b_recon_muon_end_z);
-   fChain->SetBranchAddress("mc_muon_start_x", &mc_muon_start_x, &b_mc_muon_start_x);
-   fChain->SetBranchAddress("mc_muon_start_y", &mc_muon_start_y, &b_mc_muon_start_y);
-   fChain->SetBranchAddress("mc_muon_start_z", &mc_muon_start_z, &b_mc_muon_start_z);
-   fChain->SetBranchAddress("mc_muon_end_x", &mc_muon_end_x, &b_mc_muon_end_x);
-   fChain->SetBranchAddress("mc_muon_end_y", &mc_muon_end_y, &b_mc_muon_end_y);
-   fChain->SetBranchAddress("mc_muon_end_z", &mc_muon_end_z, &b_mc_muon_end_z);
    fChain->SetBranchAddress("mc_muon_contained", &mc_muon_contained, &b_mc_muon_contained);
    fChain->SetBranchAddress("is_swtriggered", &is_swtriggered, &b_is_swtriggered);
    fChain->SetBranchAddress("vtx_resolution", &vtx_resolution, &b_vtx_resolution);
@@ -416,6 +392,10 @@ void AnaTree::Init(TTree *tree)
    fChain->SetBranchAddress("slc_longesttrack_phi", &slc_longesttrack_phi, &b_slc_longesttrack_phi);
    fChain->SetBranchAddress("slc_longesttrack_theta", &slc_longesttrack_theta, &b_slc_longesttrack_theta);
    fChain->SetBranchAddress("slc_longesttrack_iscontained", &slc_longesttrack_iscontained, &b_slc_longesttrack_iscontained);
+   fChain->SetBranchAddress("slc_muoncandidate_exists", &slc_muoncandidate_exists, &b_slc_muoncandidate_exists);
+   fChain->SetBranchAddress("slc_muoncandidate_length", &slc_muoncandidate_length, &b_slc_muoncandidate_length);
+   fChain->SetBranchAddress("slc_muoncandidate_phi", &slc_muoncandidate_phi, &b_slc_muoncandidate_phi);
+   fChain->SetBranchAddress("slc_muoncandidate_theta", &slc_muoncandidate_theta, &b_slc_muoncandidate_theta);
    fChain->SetBranchAddress("slc_acpt_outoftime", &slc_acpt_outoftime, &b_slc_acpt_outoftime);
    fChain->SetBranchAddress("slc_crosses_top_boundary", &slc_crosses_top_boundary, &b_slc_crosses_top_boundary);
    fChain->SetBranchAddress("slc_nuvtx_closetodeadregion_u", &slc_nuvtx_closetodeadregion_u, &b_slc_nuvtx_closetodeadregion_u);
@@ -435,6 +415,7 @@ void AnaTree::Init(TTree *tree)
    fChain->SetBranchAddress("slc_mult_track", &slc_mult_track, &b_slc_mult_track);
    fChain->SetBranchAddress("slc_mult_shower", &slc_mult_shower, &b_slc_mult_shower);
    fChain->SetBranchAddress("slc_mult_track_tolerance", &slc_mult_track_tolerance, &b_slc_mult_track_tolerance);
+   fChain->SetBranchAddress("slc_geocosmictag", &slc_geocosmictag, &b_slc_geocosmictag);
    fChain->SetBranchAddress("nbeamfls", &nbeamfls, &b_nbeamfls);
    fChain->SetBranchAddress("beamfls_time", &beamfls_time, &b_beamfls_time);
    fChain->SetBranchAddress("beamfls_pe", &beamfls_pe, &b_beamfls_pe);

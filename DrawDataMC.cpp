@@ -173,6 +173,8 @@ int main(int argc, char* argv[]) {
   std::map<std::string,TH1D*> hmap_vtxy_mc = *temp_map;
   mc_file->GetObject("hmap_vtxz", temp_map);
   std::map<std::string,TH1D*> hmap_vtxz_mc = *temp_map;
+  mc_file->GetObject("hmap_flsmatch_score", temp_map);
+  std::map<std::string,TH1D*> hmap_flsmatch_score_mc = *temp_map;
   //TH1D* h_trklen_total_mc = (TH1D*)mc_file->Get("h_trklen_total");
   TH1D* h_trklen_total_bnbon = (TH1D*)bnbon_file->Get("h_trklen_total");
   TH1D* h_trklen_total_extbnb = (TH1D*)extbnb_file->Get("h_trklen_total");
@@ -198,7 +200,8 @@ int main(int argc, char* argv[]) {
   TH1D* h_vtxy_total_extbnb = (TH1D*)extbnb_file->Get("h_vtxy_total");
   TH1D* h_vtxz_total_bnbon = (TH1D*)bnbon_file->Get("h_vtxz_total");
   TH1D* h_vtxz_total_extbnb = (TH1D*)extbnb_file->Get("h_vtxz_total");
-
+  TH1D* h_flsmatch_score_total_bnbon = (TH1D*)bnbon_file->Get("h_flsmatch_score_total");
+  TH1D* h_flsmatch_score_total_extbnb = (TH1D*)extbnb_file->Get("h_flsmatch_score_total");
   
   // *************************************
   // Doing beam-on minus beam-off subctraction
@@ -275,6 +278,11 @@ int main(int argc, char* argv[]) {
   h_vtxz_data->Sumw2();
   h_vtxz_data->Add(h_vtxz_total_extbnb, -1.);
   
+  h_flsmatch_score_total_extbnb->Scale(scale_factor_extbnb);
+  h_flsmatch_score_total_bnbon->Scale(scale_factor_bnbon);
+  TH1D* h_flsmatch_score_data = (TH1D*)h_flsmatch_score_total_bnbon->Clone("h_flsmatch_score_data");
+  h_flsmatch_score_data->Sumw2();
+  h_flsmatch_score_data->Add(h_flsmatch_score_total_extbnb, -1.);
   
   // *************************************
   // Plotting data and MC distribution
@@ -375,6 +383,16 @@ int main(int argc, char* argv[]) {
   leg->AddEntry(h_vtxz_data,"Data (Beam-on - Beam-off)","lep");
   DrawPOT(bnbon_pot_meas);
   
+  TCanvas* canvas_flsmatch_score = new TCanvas();
+  THStack *hs_flsmatch_score_mc = new THStack("hs_flsmatch_score",";1/(-log(L)); Selected Events");
+  leg = DrawTHStack2(hs_flsmatch_score_mc, scale_factor_mc, true, hmap_flsmatch_score_mc);
+  //h_vtxz_data->Draw("E1 same");
+  DrawDataHisto(h_flsmatch_score_data);
+  //hs_flsmatch_score_mc->SetMaximum(900);
+  leg->AddEntry(h_flsmatch_score_data,"Data (Beam-on - Beam-off)","lep");
+  DrawPOT(bnbon_pot_meas);
+  
+  
   
   // *************************************
   // Other data/MC distributions
@@ -384,6 +402,7 @@ int main(int argc, char* argv[]) {
   TH1D* h_flsTime_extbnb = (TH1D*)extbnb_file->Get("h_flsTime_wcut");
   h_flsTime_extbnb->Scale(scale_factor_extbnb);
   h_flsTime_bnbon->Scale(scale_factor_bnbon);
+  h_flsTime_mc->Scale(scale_factor_mc);
   TH1D* h_flsTime_data = (TH1D*)h_flsTime_bnbon->Clone("h_flsTime_data");
   h_flsTime_data->Sumw2();
   h_flsTime_data->Add(h_flsTime_extbnb, -1.);

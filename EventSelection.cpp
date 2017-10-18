@@ -199,7 +199,7 @@ int main(int argc, char* argv[]) {
   //*************************
   
   TApplication* rootapp = new TApplication("ROOT Application",&argc, argv);
-  gROOT->SetBatch(kTRUE);
+  //gROOT->SetBatch(kTRUE);
   gROOT->ProcessLine("gErrorIgnoreLevel = 2001;"); // 1001: INFO, 2001: WARNINGS, 3001: ERRORS
   gROOT->ProcessLine(".x rootlogon.C");
 
@@ -299,9 +299,13 @@ int main(int argc, char* argv[]) {
   int n_slc_nu_origin = 0;
   int n_slc_acpt_tag_nu = 0;
   
-  TH1D* h_eff_num = new TH1D("h_eff_num", "h_eff_num", 6, 0, 4);
-  TH1D* h_eff_den = new TH1D("h_eff_den", "h_eff_den", 6, 0, 4);
+  TH1D* h_eff_num = new TH1D("h_eff_num", "h_eff_num", 15, 0, 3);
+  TH1D* h_eff_den = new TH1D("h_eff_den", "h_eff_den", 15, 0, 3);
   TEfficiency* pEff = new TEfficiency("eff",";Neutrino Energy (truth) [GeV];Efficiency",6, 0, 4);
+  TH1D* h_eff_mumom_num = new TH1D("h_eff_mumom_num", "h_eff_mumom_num", 15, 0, 2);
+  TH1D* h_eff_mumom_den = new TH1D("h_eff_mumom_den", "h_eff_mumom_den", 15, 0, 2);
+  TH1D* h_eff_muangle_num = new TH1D("h_eff_muangle_num", "h_eff_muangle_num", 10, -1, 1);
+  TH1D* h_eff_muangle_den = new TH1D("h_eff_muangle_den", "h_eff_muangle_den", 10, -1, 1);
   
   
   
@@ -324,7 +328,7 @@ int main(int argc, char* argv[]) {
   TH1D* h_zdiff_others = new TH1D("h_zdiff_others", "h_zdiff_others", 1000, 0,1000);
   // Before selection
   std::map<std::string,TH1D*> hmap_xdiff_b;
-  hmap_xdiff_b["total"] = new TH1D("h_xdiff_total_b", ";QLL x - TPC x [cm];", 80, -200,200);
+  hmap_xdiff_b["total"] = new TH1D("h_xdiff_total_b", ";QLL x - TPC x [cm];", 80, -200,200);//  100, 0,22
   hmap_xdiff_b["signal"] = new TH1D("h_xdiff_signal_b", ";QLL x - TPC x [cm];", 80, -200,200);
   hmap_xdiff_b["background"] = new TH1D("h_xdiff_background_b", ";QLL x - TPC x [cm];", 80, -200,200);
   std::map<std::string,TH1D*> hmap_zdiff_b;
@@ -477,6 +481,11 @@ int main(int argc, char* argv[]) {
   hmap_vtxz["total"] = new TH1D("h_vtxz_total", ";Candidate Neutrino Vertex Z [cm];", 50, 0,1050);
   hmap_vtxz["signal"] = new TH1D("h_vtxz_signal", ";Candidate Neutrino Vertex Z [cm];", 50, 0,1050);
   hmap_vtxz["background"] = new TH1D("h_vtxz_background", ";Candidate Neutrino Vertex Z [cm];", 50, 0,1050);
+  
+  std::map<std::string,TH1D*> hmap_flsmatch_score;
+  hmap_flsmatch_score["total"] = new TH1D("h_flsmatch_score_total", ";1/(-log(L));", 100, 0, 1.5);
+  hmap_flsmatch_score["signal"] = new TH1D("h_flsmatch_score_signal", ";1/(-log(L));", 100, 0, 1.5);
+  hmap_flsmatch_score["background"] = new TH1D("h_flsmatch_score_background", ";1/(-log(L));", 100, 0, 1.5);
 
   
   TH1D* h_pot = new TH1D("h_pot", "First bin contains number of POT (not valid on data)", 1, 0, 1);
@@ -537,38 +546,13 @@ int main(int argc, char* argv[]) {
      */
     
     
-    
-    if (t->nbeamfls == 0) continue;
-    int flashInBeamSpill = -1;
-    
-    bool goodflash = false;
-    for (int fls = 0; fls < t->nbeamfls; fls ++){
-      h_flsTime->Fill(t->beamfls_time->at(fls) - _flashShift);
-      if(t->beamfls_pe->at(fls) > 50.) {
-        h_flsTime_wcut->Fill(t->beamfls_time->at(fls) - _flashShift);
-      }
-      if (t->beamfls_time->at(fls) > _beamSpillStarts && t->beamfls_time->at(fls) < _beamSpillEnds) {
-        
-        flashInBeamSpill = fls;
-        if (t->beamfls_pe->at(fls) >= 50) {
-          goodflash = true;
-          nEvtsWFlashInBeamSpill++;
-        }
-      }
-    }
-    
-    if (flashInBeamSpill == -1) continue;
-    
-    
-    
-    
-    
-    
     bool isSignal = false;
     if (t->nupdg == 14 && t->ccnc == 0 && t->fv == 1){
       nsignal++;
       isSignal = true;
       h_eff_den->Fill(t->nu_e);
+      h_eff_mumom_den->Fill(t->true_muon_mom);
+      //h_eff_muangle_den->Fill(t->nu_e);
       h_mueff_den->Fill(t->true_muon_mom);
       
       if (t->muon_is_reco){
@@ -596,6 +580,35 @@ int main(int argc, char* argv[]) {
     if(t->nupdg == 14 && t->ccnc == 0){
       nNumuCC++;
     }
+    
+    
+    
+    if (t->nbeamfls == 0) continue;
+    int flashInBeamSpill = -1;
+    double old_pe = -1;
+    
+    for (int fls = 0; fls < t->nbeamfls; fls ++){
+      h_flsTime->Fill(t->beamfls_time->at(fls) - _flashShift);
+      if(t->beamfls_pe->at(fls) > 50.) {
+        h_flsTime_wcut->Fill(t->beamfls_time->at(fls) - _flashShift);
+      }
+      if (t->beamfls_time->at(fls) > _beamSpillStarts && t->beamfls_time->at(fls) < _beamSpillEnds) {
+        
+        //flashInBeamSpill = fls;
+        if (t->beamfls_pe->at(fls) >= 50) {
+          if (t->beamfls_pe->at(fls) > old_pe) {
+            flashInBeamSpill = fls;
+            old_pe = t->beamfls_pe->at(fls);
+          }
+          nEvtsWFlashInBeamSpill++;
+        }
+      }
+    }
+    
+    
+    if (flashInBeamSpill == -1) continue;
+    
+
     
     
     bool isNueCC = false;
@@ -665,7 +678,7 @@ int main(int argc, char* argv[]) {
     
     
     
-    if (!goodflash) continue;
+    
     
     std::vector<bool> isBackground(t->nslices, false);
     
@@ -677,9 +690,14 @@ int main(int argc, char* argv[]) {
       // PMTs
       
       if (flashInBeamSpill > -1 && t->slc_flsmatch_score->at(slc) > -1
-          && t->slc_flsmatch_qllx->at(slc)!= -9999 && t->slc_flsmatch_tpcx->at(slc)!=-9999) {
+          && t->slc_flsmatch_qllx->at(slc)!= -9999 && t->slc_flsmatch_tpcx->at(slc)!=-9999
+          /*&& t->slc_nuvtx_z->at(slc)>500.*/) {
         hmap_xdiff_b["total"]->Fill(t->slc_flsmatch_qllx->at(slc) - t->slc_flsmatch_tpcx->at(slc));
         hmap_zdiff_b["total"]->Fill(t->slc_flsmatch_hypoz->at(slc) - t->beamfls_z->at(flashInBeamSpill));
+        if (t->slc_flsmatch_qllx->at(slc) - t->slc_flsmatch_tpcx->at(slc) > 17.6 &&
+            t->slc_flsmatch_qllx->at(slc) - t->slc_flsmatch_tpcx->at(slc) < 17.8) {
+          //std::cout << ">>>>>>>>>>>> deltaX " << t->slc_flsmatch_qllx->at(slc) - t->slc_flsmatch_tpcx->at(slc) << ",run " << t->run << ", event " << t->event << ", slice " << slc << std::endl;
+        }
         if ( isSignal && (t->slc_origin->at(slc) == 0 || t->slc_origin->at(slc) == 2)) {
           hmap_xdiff_b["signal"]->Fill(t->slc_flsmatch_qllx->at(slc) - t->slc_flsmatch_tpcx->at(slc));
           hmap_zdiff_b["signal"]->Fill(t->slc_flsmatch_hypoz->at(slc) - t->beamfls_z->at(flashInBeamSpill));
@@ -797,13 +815,15 @@ int main(int argc, char* argv[]) {
     
     if (scl_ll_max == -1) continue;
     
-    if (score_max <= 0.00000001) continue;
+    //if (score_max <= 0.00000001) continue;
+    if (score_max <= 3e-4) continue;
     //if (score_max <= 0.001) continue;
     //std::cout << "passed score" << std::endl;
     if(t->slc_flsmatch_qllx->at(scl_ll_max) - t->slc_flsmatch_tpcx->at(scl_ll_max) > 50) continue;
+    if(t->slc_flsmatch_qllx->at(scl_ll_max) - t->slc_flsmatch_tpcx->at(scl_ll_max) < -100) continue;
     //std::cout << "passed x diff" << std::endl;
-    //if(t->slc_flsmatch_qllx->at(scl_ll_max) - t->slc_flsmatch_tpcx->at(scl_ll_max) < -80) continue;
-    if(abs(t->slc_flsmatch_hypoz->at(scl_ll_max) - t->beamfls_z->at(flashInBeamSpill)) > 100) continue;
+    if(abs(t->slc_flsmatch_hypoz->at(scl_ll_max) - t->beamfls_z->at(flashInBeamSpill)) > 50) continue;
+    if(abs(t->slc_flsmatch_hypoz->at(scl_ll_max) - t->beamfls_z->at(flashInBeamSpill)) < -50) continue;
     //std::cout << "passed z diff" << std::endl;
     
     if (isSignal && (t->slc_origin->at(scl_ll_max)==0 || t->slc_origin->at(scl_ll_max)==2)) nSignalFlashMatched ++;
@@ -822,6 +842,8 @@ int main(int argc, char* argv[]) {
     if(!t->slc_passed_min_track_quality->at(scl_ll_max)) continue;
     
     if(!t->slc_passed_min_vertex_quality->at(scl_ll_max)) continue;
+    
+    //if(t->slc_geocosmictag->at(scl_ll_max)) continue;
     
     //if(t->slc_ntrack->at(scl_ll_max) == 1 && t->slc_crosses_top_boundary->at(scl_ll_max) == 1) continue;
     
@@ -849,6 +871,8 @@ int main(int argc, char* argv[]) {
     hmap_vtxy["total"]->Fill(t->slc_nuvtx_y->at(scl_ll_max));
     hmap_vtxz["total"]->Fill(t->slc_nuvtx_z->at(scl_ll_max));
     
+    hmap_flsmatch_score["total"]->Fill(t->slc_flsmatch_score->at(scl_ll_max));
+    
     // SIGNAL
     if ( isSignal && (t->slc_origin->at(scl_ll_max) == 0 || t->slc_origin->at(scl_ll_max) == 2)) {
       hmap_xdiff["signal"]->Fill(t->slc_flsmatch_qllx->at(scl_ll_max) - t->slc_flsmatch_tpcx->at(scl_ll_max));
@@ -857,6 +881,8 @@ int main(int argc, char* argv[]) {
       hmap_vtxx["signal"]->Fill(t->slc_nuvtx_x->at(scl_ll_max));
       hmap_vtxy["signal"]->Fill(t->slc_nuvtx_y->at(scl_ll_max));
       hmap_vtxz["signal"]->Fill(t->slc_nuvtx_z->at(scl_ll_max));
+      
+      hmap_flsmatch_score["signal"]->Fill(t->slc_flsmatch_score->at(scl_ll_max));
     }
     // BACKGROUND
     else {
@@ -866,6 +892,8 @@ int main(int argc, char* argv[]) {
       hmap_vtxx["background"]->Fill(t->slc_nuvtx_x->at(scl_ll_max));
       hmap_vtxy["background"]->Fill(t->slc_nuvtx_y->at(scl_ll_max));
       hmap_vtxz["background"]->Fill(t->slc_nuvtx_z->at(scl_ll_max));
+      
+      hmap_flsmatch_score["background"]->Fill(t->slc_flsmatch_score->at(scl_ll_max));
     }
     
     
@@ -880,6 +908,7 @@ int main(int argc, char* argv[]) {
     if(nu_origin && t->ccnc==0 && t->nupdg==14 && t->fv==1){
       signal_sel ++;
       h_eff_num->Fill(t->nu_e);
+      h_eff_mumom_num->Fill(t->true_muon_mom);
       pEff->Fill(true, t->nu_e);
       hmap_trklen["signal"]->Fill(t->slc_longesttrack_length->at(scl_ll_max));
       hmap_trkphi["signal"]->Fill(t->slc_longesttrack_phi->at(scl_ll_max));
@@ -1003,6 +1032,7 @@ int main(int argc, char* argv[]) {
       hmap_multpfp["cosmic"]->Fill(t->slc_mult_pfp->at(scl_ll_max));
       hmap_multtracktol["cosmic"]->Fill(t->slc_mult_track_tolerance->at(scl_ll_max));
       //std::cout << "Is a cosmic but is selected. event: " << t->event << std::endl;
+      //std::cout << "\t vertex " << t->slc_nuvtx_x->at(scl_ll_max) << " " << t->slc_nuvtx_y->at(scl_ll_max) << " " << t->slc_nuvtx_z->at(scl_ll_max) << std::endl;
       
       if (t->slc_origin_extra->at(scl_ll_max) == 0) {
         hmap_trklen["cosmic_stopmu"]->Fill(t->slc_longesttrack_length->at(scl_ll_max));
@@ -1047,12 +1077,13 @@ int main(int argc, char* argv[]) {
   // ************************
   
   std::cout << "nsignal is " << nsignal << std::endl;
-  std::cout << "signal_sel is " << signal_sel << std::endl;
-  std::cout << "bkg_anumu_sel is " << bkg_anumu_sel << std::endl;
-  std::cout << "bkg_nue_sel is " << bkg_nue_sel << std::endl;
-  std::cout << "bkg_nc_sel is " << bkg_nc_sel << std::endl;
-  std::cout << "bkg_outfv_sel is " << bkg_outfv_sel << std::endl;
-  std::cout << "bkg_cosmic_sel is " << bkg_cosmic_sel << std::endl << std::endl;
+  int sel_tot = signal_sel + bkg_anumu_sel + bkg_nue_sel + bkg_nc_sel + bkg_outfv_sel + bkg_cosmic_sel;
+  std::cout << "signal_sel is     " << signal_sel     << ", " << (double)signal_sel/(double)sel_tot * 100. << std::endl;
+  std::cout << "bkg_anumu_sel is  " << bkg_anumu_sel  << ", " << (double)bkg_anumu_sel/(double)sel_tot * 100. << std::endl;
+  std::cout << "bkg_nue_sel is    " << bkg_nue_sel    << ", " << (double)bkg_nue_sel/(double)sel_tot * 100. << std::endl;
+  std::cout << "bkg_nc_sel is     " << bkg_nc_sel     << ", " << (double)bkg_nc_sel/(double)sel_tot * 100. << std::endl;
+  std::cout << "bkg_outfv_sel is  " << bkg_outfv_sel  << ", " << (double)bkg_outfv_sel/(double)sel_tot * 100. << std::endl;
+  std::cout << "bkg_cosmic_sel is " << bkg_cosmic_sel << ", " << (double)bkg_cosmic_sel/(double)sel_tot * 100. << std::endl << std::endl;
   
   std::cout << "Efficiency: " << signal_sel/(double)nsignal << std::endl;
   std::cout << "Purity: " << signal_sel/(double)(signal_sel+bkg_anumu_sel+bkg_nue_sel+bkg_nc_sel+bkg_outfv_sel+bkg_cosmic_sel) << std::endl;
@@ -1109,6 +1140,20 @@ int main(int argc, char* argv[]) {
   temp2 = "./output/muon_reco_efficiency";
   canvas_muon_reco_efficiency->SaveAs(temp2 + ".pdf");
   canvas_muon_reco_efficiency->SaveAs(temp2 + ".C","C");
+  
+  
+  TCanvas * canvas_efficiency_mumom = new TCanvas();
+  TEfficiency* pEff4 = new TEfficiency(*h_eff_mumom_num,*h_eff_mumom_den);
+  pEff4->SetTitle(";True Muon Momentum [GeV];Efficiency");
+  pEff4->SetLineColor(kGreen+3);
+  pEff4->SetMarkerColor(kGreen+3);
+  pEff4->SetMarkerStyle(20);
+  pEff4->SetMarkerSize(0.5);
+  pEff4->Draw("AP");
+  
+  temp2 = "./output/efficiency_mumom";
+  canvas_efficiency_mumom->SaveAs(temp2 + ".pdf");
+  canvas_efficiency_mumom->SaveAs(temp2 + ".C","C");
   
   /*TCanvas *c33 = new TCanvas();
   TEfficiency* pEff4 = new TEfficiency(*h_mueff_2_num,*h_mueff_den);
@@ -1368,6 +1413,8 @@ int main(int argc, char* argv[]) {
   file_out->WriteObject(&hmap_vtxx, "hmap_vtxx");
   file_out->WriteObject(&hmap_vtxy, "hmap_vtxy");
   file_out->WriteObject(&hmap_vtxz, "hmap_vtxz");
+  
+  file_out->WriteObject(&hmap_flsmatch_score, "hmap_flsmatch_score");
 
   h_flsTime->Write();
   h_flsTime_wcut->Write();
@@ -1388,7 +1435,7 @@ int main(int argc, char* argv[]) {
   double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
   cout << endl << endl << "Computing time: " << elapsed_secs << " seconds = " << elapsed_secs/60. << " minutes." << endl << endl;
   
-  //rootapp->Run();
+  rootapp->Run();
   //rootapp->Terminate(0);
   
   return 0;
