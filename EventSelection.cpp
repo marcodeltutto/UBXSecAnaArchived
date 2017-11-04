@@ -211,7 +211,7 @@ int main(int argc, char* argv[]) {
   //*************************
   
   TApplication* rootapp = new TApplication("ROOT Application",&argc, argv);
-  gROOT->SetBatch(kTRUE);
+  //gROOT->SetBatch(kTRUE);
   gROOT->ProcessLine("gErrorIgnoreLevel = 2001;"); // 1001: INFO, 2001: WARNINGS, 3001: ERRORS
   gROOT->ProcessLine(".x rootlogon.C");
 
@@ -1802,7 +1802,7 @@ int main(int argc, char* argv[]) {
   double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
   cout << endl << endl << "Computing time: " << elapsed_secs << " seconds = " << elapsed_secs/60. << " minutes." << endl << endl;
   
-  //rootapp->Run();
+  rootapp->Run();
   //rootapp->Terminate(0);
   
   return 0;
