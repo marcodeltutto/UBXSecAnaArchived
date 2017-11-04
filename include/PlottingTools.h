@@ -25,10 +25,17 @@ TLegend* DrawTHStack(THStack *hs_trklen,
   
   
   for (auto iter : themap) {
+    if (iter.second == NULL || iter.first == "intimecosmic") continue;
     iter.second->Scale(pot_scaling);
   }
-  
-  
+
+  if (themap["intimecosmic"] != NULL) {
+    themap["intimecosmic"]->SetLineColor(kBlue+2);
+    themap["intimecosmic"]->SetFillColor(kBlue+2);
+    themap["intimecosmic"]->SetFillStyle(3004);
+    hs_trklen->Add(themap["intimecosmic"]);
+  }
+
   if (_breakdownPlots) {
     themap["cosmic_nostopmu"]->SetLineColor(kBlue+2);
     themap["cosmic_nostopmu"]->SetFillColor(kBlue+2);
@@ -135,6 +142,9 @@ TLegend* DrawTHStack(THStack *hs_trklen,
     leg2->AddEntry(themap["outfv_nostopmu"],"OUTFV (other)","f");
     leg2->AddEntry(themap["cosmic_stopmu"],"Cosmic (stopping #mu)","f");
     leg2->AddEntry(themap["cosmic_nostopmu"],"Cosmic (other)","f");
+    if (themap["intimecosmic"] != NULL) {
+      leg2->AddEntry(themap["intimecosmic"],"In-time cosmics","f");
+    }
   } else {
     sstm << "NC, " << std::setprecision(2)  << themap["nc"]->Integral() / themap["total"]->Integral()*100. << "%";
     leg2->AddEntry(themap["nc"],sstm.str().c_str(),"f");
@@ -208,6 +218,88 @@ TLegend* DrawTHStack2(THStack *hs_trklen,
   return leg2;
 
 }
+
+//**********************************************************
+TLegend* DrawTHStack3(THStack *hs_trklen,
+                      double pot_scaling,
+                      bool _breakdownPlots,
+                      std::map<std::string,TH1D*> themap){
+  
+  
+  for (auto iter : themap) {
+    iter.second->Scale(pot_scaling);
+  }
+  
+  themap["proton"]->SetLineColor(kBlue+2);
+  themap["proton"]->SetFillColor(kBlue+2);
+  hs_trklen->Add(themap["proton"]);
+  
+  themap["pion"]->SetLineColor(kGreen+2);
+  themap["pion"]->SetFillColor(kGreen+2);
+  hs_trklen->Add(themap["pion"]);
+  
+  themap["photon"]->SetLineColor(kOrange-3);
+  themap["photon"]->SetFillColor(kOrange-3);
+  hs_trklen->Add(themap["photon"]);
+  
+  themap["electron"]->SetLineColor(kMagenta+1);
+  themap["electron"]->SetFillColor(kMagenta+1);
+  hs_trklen->Add(themap["electron"]);
+  
+  themap["else"]->SetLineColor(kGray+2);
+  themap["else"]->SetFillColor(kGray+2);
+  hs_trklen->Add(themap["else"]);
+  
+  themap["muon"]->SetLineColor(kRed+2);
+  themap["muon"]->SetFillColor(kRed+2);
+  hs_trklen->Add(themap["muon"]);
+  
+  hs_trklen->Draw();
+  
+  themap["total"]->SetFillColor(kBlack);
+  themap["total"]->SetFillStyle(3005);
+  themap["total"]->Draw("E2 same");
+  
+  
+  
+  
+  TLegend* leg2;
+  
+  leg2 = new TLegend(0.6475645,0.5136842,0.8767908,0.8336842,NULL,"brNDC");
+  
+  std::stringstream sstm;
+  
+  sstm << "Muon, " << std::setprecision(2)  << themap["muon"]->Integral() / themap["total"]->Integral()*100. << "%";
+  leg2->AddEntry(themap["muon"],sstm.str().c_str(),"f");
+  sstm.str("");
+  
+  sstm << "Proton, " << std::setprecision(2)  << themap["proton"]->Integral() / themap["total"]->Integral()*100. << "%";
+  leg2->AddEntry(themap["proton"],sstm.str().c_str(),"f");
+  sstm.str("");
+  
+  sstm << "Pion, " << std::setprecision(2)  << themap["pion"]->Integral() / themap["total"]->Integral()*100. << "%";
+  leg2->AddEntry(themap["pion"],sstm.str().c_str(),"f");
+  sstm.str("");
+  
+  sstm << "Photon, " << std::setprecision(2)  << themap["photon"]->Integral() / themap["total"]->Integral()*100. << "%";
+  leg2->AddEntry(themap["photon"],sstm.str().c_str(),"f");
+  sstm.str("");
+  
+  sstm << "Electron, " << std::setprecision(2)  << themap["electron"]->Integral() / themap["total"]->Integral()*100. << "%";
+  leg2->AddEntry(themap["electron"],sstm.str().c_str(),"f");
+  sstm.str("");
+  
+  sstm << "Other, " << std::setprecision(2)  << themap["else"]->Integral() / themap["total"]->Integral()*100. << "%";
+  leg2->AddEntry(themap["else"],sstm.str().c_str(),"f");
+  sstm.str("");
+  
+  leg2->AddEntry(themap["total"],"MC Stat Unc.","f");
+  leg2->Draw();
+  
+  return leg2;
+  
+}
+
 
 void DrawDataHisto(TH1D* histo) {
 
