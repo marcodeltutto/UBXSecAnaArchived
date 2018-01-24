@@ -59,12 +59,12 @@ AnaTree::AnaTree(TTree *tree) : fChain(0)
 {
 // if parameter tree is not specified (or zero), connect the file
 // used to generate this class and read the Tree.
-   if (tree == 0) {
-      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("../files/mcc8.3_stopmu_test/ubxsec_output_mc_bnbcosmic_mcc8.3_stopmu_test10.root");
+   if (tree == 0) { // gen with test10
+      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("../files/mcc8.3_stopmu_test/ubxsec_output_mc_bnbcosmic_mcc8.3_stopmu_test14.root");
       if (!f || !f->IsOpen()) {
-         f = new TFile("../files/mcc8.3_stopmu_test/ubxsec_output_mc_bnbcosmic_mcc8.3_stopmu_test10.root");
+         f = new TFile("../files/mcc8.3_stopmu_test/ubxsec_output_mc_bnbcosmic_mcc8.3_stopmu_test14.root");
       }
-      TDirectory * dir = (TDirectory*)f->Get("../files/mcc8.3_stopmu_test/ubxsec_output_mc_bnbcosmic_mcc8.3_stopmu_test10.root:/pandoraCosmicStoppingMu");
+      TDirectory * dir = (TDirectory*)f->Get("../files/mcc8.3_stopmu_test/ubxsec_output_mc_bnbcosmic_mcc8.3_stopmu_test14.root:/pandoraCosmicStoppingMu");
       dir->GetObject("tree",tree);
 
    }
