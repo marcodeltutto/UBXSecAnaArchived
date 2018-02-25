@@ -1,5 +1,5 @@
 SRC_PATH=source
-FILES=source/Spectrum.cpp source/Spectrum2D.cpp source/AnaTree.C
+FILES=source/Spectrum.cpp source/Spectrum2D.cpp source/AnaTree.C source/PlotHandler.cxx source/SmearingMatrix2D.cxx
 SOURCES = $(FILES:%.cpp=$(SRC_PATH)/%.cpp)
 
 CFLAGS=-Wall

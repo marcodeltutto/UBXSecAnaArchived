@@ -1,8 +1,8 @@
 //////////////////////////////////////////////////////////
 // This class has been automatically generated on
-// Wed Feb 21 14:02:19 2018 by ROOT version 6.06/06
+// Mon Feb 12 22:07:20 2018 by ROOT version 6.06/06
 // from TTree tree/
-// found on file: ../files/mcc8.6_stopmu_test/ubxsec_output_mc_bnbcosmic_mcc8.6_stopmu_test15.root
+// found on file: ../files/mcc8.6_stopmu_test/ubxsec_output_mc_bnbcosmic_mcc8.6_stopmu_test19.root
 //////////////////////////////////////////////////////////
 
 #ifndef AnaTree_h
@@ -49,6 +49,7 @@ public :
    Double_t        lep_phi;
    Int_t           genie_mult;
    Int_t           genie_mult_ch;
+   Double_t        bnb_weight;
    Int_t           mc_muon_contained;
    Int_t           is_swtriggered;
    Double_t        vtx_resolution;
@@ -78,6 +79,13 @@ public :
    vector<double>  slc_longesttrack_phi;
    vector<double>  slc_longesttrack_theta;
    vector<bool>    slc_longesttrack_iscontained;
+   vector<double>  slc_longestshower_length;
+   vector<double>  slc_longestshower_phi;
+   vector<double>  slc_longestshower_theta;
+   vector<double>  slc_longestshower_openangle;
+   vector<double>  slc_longestshower_startx;
+   vector<double>  slc_longestshower_starty;
+   vector<double>  slc_longestshower_startz;
    vector<int>     slc_acpt_outoftime;
    vector<int>     slc_crosses_top_boundary;
    vector<int>     slc_nuvtx_closetodeadregion_u;
@@ -110,11 +118,21 @@ public :
    vector<double>  slc_muoncandidate_mcs_ll;
    vector<bool>    slc_muoncandidate_contained;
    vector<double>  slc_muoncandidate_dqdx_trunc;
+   vector<double>  slc_muoncandidate_dqdx_u_trunc;
+   vector<double>  slc_muoncandidate_dqdx_v_trunc;
    vector<vector<double> > slc_muoncandidate_dqdx_v;
    vector<bool>    slc_muoncandidate_mip_consistency;
+   vector<bool>    slc_muoncandidate_mip_consistency2;
    vector<int>     slc_muoncandidate_truepdg;
    vector<int>     slc_muoncandidate_trueorigin;
    vector<double>  slc_muoncandidate_mcs_delta_ll;
+   vector<double>  slc_muoncandidate_residuals_mean;
+   vector<double>  slc_muoncandidate_residuals_std;
+   vector<int>     slc_muoncandidate_wiregap;
+   vector<int>     slc_muoncandidate_wiregap_dead;
+   vector<double>  slc_muoncandidate_linearity;
+   vector<double>  slc_muoncandidate_perc_used_hits_in_cluster;
+   vector<double>  slc_muoncandidate_maxscatteringangle;
    Int_t           nbeamfls;
    vector<double>  beamfls_time;
    vector<double>  beamfls_pe;
@@ -157,6 +175,7 @@ public :
    TBranch        *b_ubxsec_event_split_lep_phi;   //!
    TBranch        *b_ubxsec_event_split_genie_mult;   //!
    TBranch        *b_ubxsec_event_split_genie_mult_ch;   //!
+   TBranch        *b_ubxsec_event_split_bnb_weight;   //!
    TBranch        *b_ubxsec_event_split_mc_muon_contained;   //!
    TBranch        *b_ubxsec_event_split_is_swtriggered;   //!
    TBranch        *b_ubxsec_event_split_vtx_resolution;   //!
@@ -186,6 +205,13 @@ public :
    TBranch        *b_ubxsec_event_split_slc_longesttrack_phi;   //!
    TBranch        *b_ubxsec_event_split_slc_longesttrack_theta;   //!
    TBranch        *b_ubxsec_event_split_slc_longesttrack_iscontained;   //!
+   TBranch        *b_ubxsec_event_split_slc_longestshower_length;   //!
+   TBranch        *b_ubxsec_event_split_slc_longestshower_phi;   //!
+   TBranch        *b_ubxsec_event_split_slc_longestshower_theta;   //!
+   TBranch        *b_ubxsec_event_split_slc_longestshower_openangle;   //!
+   TBranch        *b_ubxsec_event_split_slc_longestshower_startx;   //!
+   TBranch        *b_ubxsec_event_split_slc_longestshower_starty;   //!
+   TBranch        *b_ubxsec_event_split_slc_longestshower_startz;   //!
    TBranch        *b_ubxsec_event_split_slc_acpt_outoftime;   //!
    TBranch        *b_ubxsec_event_split_slc_crosses_top_boundary;   //!
    TBranch        *b_ubxsec_event_split_slc_nuvtx_closetodeadregion_u;   //!
@@ -218,11 +244,21 @@ public :
    TBranch        *b_ubxsec_event_split_slc_muoncandidate_mcs_ll;   //!
    TBranch        *b_ubxsec_event_split_slc_muoncandidate_contained;   //!
    TBranch        *b_ubxsec_event_split_slc_muoncandidate_dqdx_trunc;   //!
+   TBranch        *b_ubxsec_event_split_slc_muoncandidate_dqdx_u_trunc;   //!
+   TBranch        *b_ubxsec_event_split_slc_muoncandidate_dqdx_v_trunc;   //!
    TBranch        *b_ubxsec_event_split_slc_muoncandidate_dqdx_v;   //!
    TBranch        *b_ubxsec_event_split_slc_muoncandidate_mip_consistency;   //!
+   TBranch        *b_ubxsec_event_split_slc_muoncandidate_mip_consistency2;   //!
    TBranch        *b_ubxsec_event_split_slc_muoncandidate_truepdg;   //!
    TBranch        *b_ubxsec_event_split_slc_muoncandidate_trueorigin;   //!
    TBranch        *b_ubxsec_event_split_slc_muoncandidate_mcs_delta_ll;   //!
+   TBranch        *b_ubxsec_event_split_slc_muoncandidate_residuals_mean;   //!
+   TBranch        *b_ubxsec_event_split_slc_muoncandidate_residuals_std;   //!
+   TBranch        *b_ubxsec_event_split_slc_muoncandidate_wiregap;   //!
+   TBranch        *b_ubxsec_event_split_slc_muoncandidate_wiregap_dead;   //!
+   TBranch        *b_ubxsec_event_split_slc_muoncandidate_linearity;   //!
+   TBranch        *b_ubxsec_event_split_slc_muoncandidate_perc_used_hits_in_cluster;   //!
+   TBranch        *b_ubxsec_event_split_slc_muoncandidate_maxscatteringangle;   //!
    TBranch        *b_ubxsec_event_split_nbeamfls;   //!
    TBranch        *b_ubxsec_event_split_beamfls_time;   //!
    TBranch        *b_ubxsec_event_split_beamfls_pe;   //!
@@ -259,11 +295,11 @@ AnaTree::AnaTree(TTree *tree) : fChain(0)
 // if parameter tree is not specified (or zero), connect the file
 // used to generate this class and read the Tree.
    if (tree == 0) {
-      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("../files/mcc8.6_stopmu_test/ubxsec_output_mc_bnbcosmic_mcc8.6_stopmu_test15.root");
+      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("../files/mcc8.6_stopmu_test/ubxsec_output_mc_bnbcosmic_mcc8.6_stopmu_test19.root");
       if (!f || !f->IsOpen()) {
-         f = new TFile("../files/mcc8.6_stopmu_test/ubxsec_output_mc_bnbcosmic_mcc8.6_stopmu_test15.root");
+         f = new TFile("../files/mcc8.6_stopmu_test/ubxsec_output_mc_bnbcosmic_mcc8.6_stopmu_test19.root");
       }
-      TDirectory * dir = (TDirectory*)f->Get("../files/mcc8.6_stopmu_test/ubxsec_output_mc_bnbcosmic_mcc8.6_stopmu_test15.root:/UBXSec");
+      TDirectory * dir = (TDirectory*)f->Get("../files/mcc8.6_stopmu_test/ubxsec_output_mc_bnbcosmic_mcc8.6_stopmu_test19.root:/UBXSec");
       dir->GetObject("tree",tree);
 
    }
@@ -335,6 +371,7 @@ void AnaTree::Init(TTree *tree)
    fChain->SetBranchAddress("lep_phi", &lep_phi, &b_ubxsec_event_split_lep_phi);
    fChain->SetBranchAddress("genie_mult", &genie_mult, &b_ubxsec_event_split_genie_mult);
    fChain->SetBranchAddress("genie_mult_ch", &genie_mult_ch, &b_ubxsec_event_split_genie_mult_ch);
+   fChain->SetBranchAddress("bnb_weight", &bnb_weight, &b_ubxsec_event_split_bnb_weight);
    fChain->SetBranchAddress("mc_muon_contained", &mc_muon_contained, &b_ubxsec_event_split_mc_muon_contained);
    fChain->SetBranchAddress("is_swtriggered", &is_swtriggered, &b_ubxsec_event_split_is_swtriggered);
    fChain->SetBranchAddress("vtx_resolution", &vtx_resolution, &b_ubxsec_event_split_vtx_resolution);
@@ -364,6 +401,13 @@ void AnaTree::Init(TTree *tree)
    fChain->SetBranchAddress("slc_longesttrack_phi", &slc_longesttrack_phi, &b_ubxsec_event_split_slc_longesttrack_phi);
    fChain->SetBranchAddress("slc_longesttrack_theta", &slc_longesttrack_theta, &b_ubxsec_event_split_slc_longesttrack_theta);
    fChain->SetBranchAddress("slc_longesttrack_iscontained", &slc_longesttrack_iscontained, &b_ubxsec_event_split_slc_longesttrack_iscontained);
+   fChain->SetBranchAddress("slc_longestshower_length", &slc_longestshower_length, &b_ubxsec_event_split_slc_longestshower_length);
+   fChain->SetBranchAddress("slc_longestshower_phi", &slc_longestshower_phi, &b_ubxsec_event_split_slc_longestshower_phi);
+   fChain->SetBranchAddress("slc_longestshower_theta", &slc_longestshower_theta, &b_ubxsec_event_split_slc_longestshower_theta);
+   fChain->SetBranchAddress("slc_longestshower_openangle", &slc_longestshower_openangle, &b_ubxsec_event_split_slc_longestshower_openangle);
+   fChain->SetBranchAddress("slc_longestshower_startx", &slc_longestshower_startx, &b_ubxsec_event_split_slc_longestshower_startx);
+   fChain->SetBranchAddress("slc_longestshower_starty", &slc_longestshower_starty, &b_ubxsec_event_split_slc_longestshower_starty);
+   fChain->SetBranchAddress("slc_longestshower_startz", &slc_longestshower_startz, &b_ubxsec_event_split_slc_longestshower_startz);
    fChain->SetBranchAddress("slc_acpt_outoftime", &slc_acpt_outoftime, &b_ubxsec_event_split_slc_acpt_outoftime);
    fChain->SetBranchAddress("slc_crosses_top_boundary", &slc_crosses_top_boundary, &b_ubxsec_event_split_slc_crosses_top_boundary);
    fChain->SetBranchAddress("slc_nuvtx_closetodeadregion_u", &slc_nuvtx_closetodeadregion_u, &b_ubxsec_event_split_slc_nuvtx_closetodeadregion_u);
@@ -396,11 +440,21 @@ void AnaTree::Init(TTree *tree)
    fChain->SetBranchAddress("slc_muoncandidate_mcs_ll", &slc_muoncandidate_mcs_ll, &b_ubxsec_event_split_slc_muoncandidate_mcs_ll);
    fChain->SetBranchAddress("slc_muoncandidate_contained", &slc_muoncandidate_contained, &b_ubxsec_event_split_slc_muoncandidate_contained);
    fChain->SetBranchAddress("slc_muoncandidate_dqdx_trunc", &slc_muoncandidate_dqdx_trunc, &b_ubxsec_event_split_slc_muoncandidate_dqdx_trunc);
+   fChain->SetBranchAddress("slc_muoncandidate_dqdx_u_trunc", &slc_muoncandidate_dqdx_u_trunc, &b_ubxsec_event_split_slc_muoncandidate_dqdx_u_trunc);
+   fChain->SetBranchAddress("slc_muoncandidate_dqdx_v_trunc", &slc_muoncandidate_dqdx_v_trunc, &b_ubxsec_event_split_slc_muoncandidate_dqdx_v_trunc);
    fChain->SetBranchAddress("slc_muoncandidate_dqdx_v", &slc_muoncandidate_dqdx_v, &b_ubxsec_event_split_slc_muoncandidate_dqdx_v);
    fChain->SetBranchAddress("slc_muoncandidate_mip_consistency", &slc_muoncandidate_mip_consistency, &b_ubxsec_event_split_slc_muoncandidate_mip_consistency);
+   fChain->SetBranchAddress("slc_muoncandidate_mip_consistency2", &slc_muoncandidate_mip_consistency2, &b_ubxsec_event_split_slc_muoncandidate_mip_consistency2);
    fChain->SetBranchAddress("slc_muoncandidate_truepdg", &slc_muoncandidate_truepdg, &b_ubxsec_event_split_slc_muoncandidate_truepdg);
    fChain->SetBranchAddress("slc_muoncandidate_trueorigin", &slc_muoncandidate_trueorigin, &b_ubxsec_event_split_slc_muoncandidate_trueorigin);
    fChain->SetBranchAddress("slc_muoncandidate_mcs_delta_ll", &slc_muoncandidate_mcs_delta_ll, &b_ubxsec_event_split_slc_muoncandidate_mcs_delta_ll);
+   fChain->SetBranchAddress("slc_muoncandidate_residuals_mean", &slc_muoncandidate_residuals_mean, &b_ubxsec_event_split_slc_muoncandidate_residuals_mean);
+   fChain->SetBranchAddress("slc_muoncandidate_residuals_std", &slc_muoncandidate_residuals_std, &b_ubxsec_event_split_slc_muoncandidate_residuals_std);
+   fChain->SetBranchAddress("slc_muoncandidate_wiregap", &slc_muoncandidate_wiregap, &b_ubxsec_event_split_slc_muoncandidate_wiregap);
+   fChain->SetBranchAddress("slc_muoncandidate_wiregap_dead", &slc_muoncandidate_wiregap_dead, &b_ubxsec_event_split_slc_muoncandidate_wiregap_dead);
+   fChain->SetBranchAddress("slc_muoncandidate_linearity", &slc_muoncandidate_linearity, &b_ubxsec_event_split_slc_muoncandidate_linearity);
+   fChain->SetBranchAddress("slc_muoncandidate_perc_used_hits_in_cluster", &slc_muoncandidate_perc_used_hits_in_cluster, &b_ubxsec_event_split_slc_muoncandidate_perc_used_hits_in_cluster);
+   fChain->SetBranchAddress("slc_muoncandidate_maxscatteringangle", &slc_muoncandidate_maxscatteringangle, &b_ubxsec_event_split_slc_muoncandidate_maxscatteringangle);
    fChain->SetBranchAddress("nbeamfls", &nbeamfls, &b_ubxsec_event_split_nbeamfls);
    fChain->SetBranchAddress("beamfls_time", &beamfls_time, &b_ubxsec_event_split_beamfls_time);
    fChain->SetBranchAddress("beamfls_pe", &beamfls_pe, &b_ubxsec_event_split_beamfls_pe);

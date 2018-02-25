@@ -25,6 +25,8 @@
 #include "Spectrum.hpp"
 #include "Spectrum2D.hpp"
 #include "PlottingTools.h"
+#include "PlotHandler.h"
+#include "SmearingMatrix2D.h"
 
 
 const bool _breakdownPlots = true;
@@ -160,7 +162,7 @@ int main(int argc, char* argv[]) {
   // *************************************
   // Calculating scale factors
   // *************************************
-  double scale_factor_extbnb = 1.23 * (382718./(double)extbnb_total_events) * ((double)bnbon_total_events/547616.);
+  double scale_factor_extbnb = 0.278463;//1.23 * (382718./(double)extbnb_total_events) * ((double)bnbon_total_events/547616.);
   //double scale_factor_extbnb = 10378764. / 8243750.;
   double scale_factor_bnbon = 1.; //bnbon_pot_meas * bnbon_pot_target;
   double scale_factor_mc_bnbcosmic = bnbon_pot_meas / mc_pot_sim;
@@ -260,6 +262,87 @@ int main(int argc, char* argv[]) {
   TH1D* h_deltax_2d_bnbon = (TH1D*)bnbon_file->Get("h_deltax_2d");
   TH1D* h_deltax_2d_extbnb = (TH1D*)extbnb_file->Get("h_deltax_2d");
 
+
+  // Muon momentum
+  TEfficiency * eff_mumom = (TEfficiency*)mc_bnbcosmic_file->Get("h_eff_mumom_den_clone");
+  TH1D * h_truth_xsec_mumom = (TH1D*)mc_bnbcosmic_file->Get("h_truth_xsec_mumom");
+  TH1D * h_eff_mumom_num = (TH1D*)mc_bnbcosmic_file->Get("h_eff_mumom_num");
+  TH1D * h_eff_mumom_den = (TH1D*)mc_bnbcosmic_file->Get("h_eff_mumom_den");
+  TH2D * h_true_reco_mom = (TH2D*)mc_bnbcosmic_file->Get("h_true_reco_mom");
+
+  // Muon costheta
+  TEfficiency * eff_muangle = (TEfficiency*)mc_bnbcosmic_file->Get("h_eff_muangle_den_clone");
+  TH1D * h_truth_xsec_muangle = (TH1D*)mc_bnbcosmic_file->Get("h_truth_xsec_muangle");
+  TH1D * h_eff_muangle_num = (TH1D*)mc_bnbcosmic_file->Get("h_eff_muangle_num");
+  TH1D * h_eff_muangle_den = (TH1D*)mc_bnbcosmic_file->Get("h_eff_muangle_den");
+  TH2D * h_true_reco_costheta = (TH2D*)mc_bnbcosmic_file->Get("h_true_reco_costheta");
+
+  // Double differential
+  std::map<std::string,TH2D*>* temp_map2;
+  mc_bnbcosmic_file->GetObject("hmap_trktheta_trkmom", temp_map2);
+  std::map<std::string,TH2D*> hmap_trktheta_trkmom_mc = *temp_map2;
+  TH2D* h_trktheta_trkmom_total_bnbon = (TH2D*)bnbon_file->Get("h_trktheta_trkmom_total");
+  TH2D* h_trktheta_trkmom_total_extbnb = (TH2D*)extbnb_file->Get("h_trktheta_trkmom_total");
+
+
+
+
+  ubana::PlotHandler _plot_handler;
+  _plot_handler.SetScaleFactors(scale_factor_mc_bnbcosmic, scale_factor_bnbon, scale_factor_extbnb);
+  _plot_handler.SetPOT(bnbon_pot_meas);
+  _plot_handler.SetOutDir("output_data_mc");
+  std::cout << "FLUX: " << _plot_handler.EstimateFlux() << std::endl;
+
+  /*_plot_handler.SetHistograms(hmap_trklen_mc, h_trklen_total_bnbon, h_trklen_total_extbnb);  
+  _plot_handler.SetNameAndLabel("trklen", ";Candidate Track Length [cm]; Selected Events");
+  _plot_handler.ProcessPlots();
+  _plot_handler.Draw();*/
+
+  std::vector<std::string> hist_to_subtract = {"beam-off", "cosmic", "outfv", "nc", "nue", "anumu"};
+
+  //
+  // Muon Momentum
+  //
+  _plot_handler.Reset();
+  _plot_handler.SetHistograms(hmap_trkmom_mc, h_trkmom_total_bnbon, h_trkmom_total_extbnb);  
+  _plot_handler.SetTruthHistograms(h_eff_mumom_num, h_eff_mumom_den, h_true_reco_mom);
+  _plot_handler.SetTruthXSec(h_truth_xsec_mumom);
+  _plot_handler.SetNameAndLabel("trkmom", ";Candidate Track Momentum (MCS) [GeV]; Selected Events");
+  _plot_handler.ProcessPlots();
+  _plot_handler.Draw();
+  _plot_handler.Draw(hist_to_subtract);
+  _plot_handler.CalculateSmearingMatrix(7, 6);
+  _plot_handler.ExtractCrossSection("p_{#mu} [GeV]", "d#sigma/dp_{#mu} [10^{-38} cm^{2}/GeV]");
+
+  //
+  // Muon CosTheta
+  // 
+  _plot_handler.Reset();
+  _plot_handler.SetHistograms(hmap_trktheta_mc, h_trktheta_total_bnbon, h_trktheta_total_extbnb);  
+  _plot_handler.SetTruthHistograms(h_eff_muangle_num, h_eff_muangle_den, h_true_reco_costheta);
+  _plot_handler.SetTruthXSec(h_truth_xsec_muangle);
+  _plot_handler.SetNameAndLabel("trkcostheta", ";Candidate Track cos(#theta) [GeV]; Selected Events");
+  _plot_handler.ProcessPlots();
+  _plot_handler.Draw();
+  _plot_handler.Draw(hist_to_subtract);
+  _plot_handler.CalculateSmearingMatrix(9, 9);
+  _plot_handler.ExtractCrossSection("cos(#theta_{#mu})", "d#sigma/dcos(#theta_{#mu}) [10^{-38} cm^{2}]");
+
+
+  ::ubana::SmearingMatrix2D smearingmatrix2d;
+  TTree * tt;
+  mc_bnbcosmic_file->GetObject("mom_tree", tt);
+  smearingmatrix2d.SetTTree(tt);
+  int n_bins_mumom_temp = 4;
+  double bins_mumom_temp[5] = {0.00, 0.25, 0.50, 1.0, 2.50};
+  int n_bins_mucostheta_temp = 6;
+  double bins_mucostheta_temp[7] = {-1.00, -0.50, 0.00, 0.25, 0.50, 0.75, 1.00};
+  smearingmatrix2d.SetBins(bins_mucostheta_temp, n_bins_mucostheta_temp, bins_mumom_temp, n_bins_mumom_temp);
+  smearingmatrix2d.CalculateSmearingMatrix();
+  smearingmatrix2d.SetOutputFileName("latex_test.tex");
+  smearingmatrix2d.PrintSmearingMatrixLatex();
+  
+
   
   // *************************************
   // Doing beam-on minus beam-off subtraction
@@ -275,18 +358,35 @@ int main(int argc, char* argv[]) {
   std::cout << "\t Number of EXTBNB events:  " << h_trklen_total_extbnb->Integral() << std::endl;
   std::cout << "\t           BNBON - EXTBNB: " << h_trklen_total_bnbon->Integral() - h_trklen_total_extbnb->Integral() << std::endl;
 
+  std::cout << std::endl;
+
+  std::cout << "With the correct normalisation (including under/overflows): " << std::endl;
+  std::cout << "\t Number of BNBON events:   " << h_trklen_total_bnbon->Integral(0, h_trklen_total_bnbon->GetNbinsX()+1) << std::endl;
+  std::cout << "\t Number of EXTBNB events:  " << h_trklen_total_extbnb->Integral(0, h_trklen_total_extbnb->GetNbinsX()+1) << std::endl;
+  std::cout << "\t           BNBON - EXTBNB: " << h_trklen_total_bnbon->Integral(0, h_trklen_total_bnbon->GetNbinsX()+1) - h_trklen_total_extbnb->Integral(0, h_trklen_total_extbnb->GetNbinsX()+1) << std::endl;
+
+/*
   h_trkmom_total_extbnb->Scale(scale_factor_extbnb);
   h_trkmom_total_bnbon->Scale(scale_factor_bnbon);
   TH1D* h_trkmom_data = (TH1D*)h_trkmom_total_bnbon->Clone("h_trkmom_data");
   h_trkmom_data->Sumw2();
   h_trkmom_data->Add(h_trkmom_total_extbnb, -1.);
+  */
   
+  /*
   h_trktheta_total_extbnb->Scale(scale_factor_extbnb);
   h_trktheta_total_bnbon->Scale(scale_factor_bnbon);
   TH1D* h_trktheta_data = (TH1D*)h_trktheta_total_bnbon->Clone("h_trktheta_data");
   h_trktheta_data->Sumw2();
   h_trktheta_data->Add(h_trktheta_total_extbnb, -1.);
-  
+  */
+
+  h_trktheta_trkmom_total_extbnb->Scale(scale_factor_extbnb);
+  h_trktheta_trkmom_total_bnbon->Scale(scale_factor_bnbon);
+  TH1D* h_trktheta_trkmom_data = (TH1D*)h_trktheta_trkmom_total_bnbon->Clone("h_trktheta_trkmom_data");
+  h_trktheta_trkmom_data->Sumw2();
+  h_trktheta_trkmom_data->Add(h_trktheta_trkmom_total_extbnb, -1.);
+
   h_trkphi_total_extbnb->Scale(scale_factor_extbnb);
   h_trkphi_total_bnbon->Scale(scale_factor_bnbon);
   TH1D* h_trkphi_data = (TH1D*)h_trkphi_total_bnbon->Clone("h_trklen_data");
@@ -388,44 +488,147 @@ int main(int argc, char* argv[]) {
   
   TCanvas* canvas_trklen = new TCanvas();
   THStack *hs_trklen_mc = new THStack("hs_trklen",";Candidate Track Length [cm]; Selected Events");
+  hmap_trklen_mc["beam-off"] = h_trklen_total_extbnb;
   leg = DrawTHStack(hs_trklen_mc, scale_factor_mc_bnbcosmic, true, hmap_trklen_mc);
   std::cout << "\t             MC BNBCOSMIC: " << hmap_trklen_mc["total"]->Integral() << std::endl;
-  DrawDataHisto(h_trklen_data);
-  leg->AddEntry(h_trklen_data,"Data (Beam-on - Beam-off)","lep");
+  DrawDataHisto(h_trklen_total_bnbon);
+  leg->AddEntry(hmap_trklen_mc["beam-off"],"Data (Beam-off)","f");
+  leg->AddEntry(h_trklen_total_bnbon,"Data (Beam-on)","lep");
+  //DrawDataHisto(h_trklen_data);
+  //leg->AddEntry(h_trklen_data,"Data (Beam-on - Beam-off)","lep");
   DrawPOT(bnbon_pot_meas);
+  
   std::cout << "\t             DATA (on-off): " << h_trklen_data->Integral() << std::endl;
+  
+
+  double den = hmap_trklen_mc["signal"]->Integral() +
+  hmap_trklen_mc["cosmic"]->Integral() +
+  hmap_trklen_mc["outfv"]->Integral() +
+  hmap_trklen_mc["nc"]->Integral() +
+  hmap_trklen_mc["anumu"]->Integral() +
+  hmap_trklen_mc["nue"]->Integral() +
+  hmap_trklen_mc["beam-off"]->Integral();
+
+  std::cout << std::endl;
+  
+  std::cout << "Number of events per channel:" << std::endl;
+  std::cout << "signal: " << hmap_trklen_mc["signal"]->Integral() << ", " << hmap_trklen_mc["signal"]->Integral() / den << std::endl;
+  std::cout << "cosmic: " << hmap_trklen_mc["cosmic"]->Integral() << ", " << hmap_trklen_mc["cosmic"]->Integral() / den << std::endl;
+  std::cout << "outfv: " << hmap_trklen_mc["outfv"]->Integral() << ", " << hmap_trklen_mc["outfv"]->Integral() / den << std::endl;
+  std::cout << "nc: " << hmap_trklen_mc["nc"]->Integral() << ", " << hmap_trklen_mc["nc"]->Integral() / den << std::endl;
+  std::cout << "anumu: " << hmap_trklen_mc["anumu"]->Integral() << ", " << hmap_trklen_mc["anumu"]->Integral() / den << std::endl;
+  std::cout << "nue: " << hmap_trklen_mc["nue"]->Integral() << ", " << hmap_trklen_mc["nue"]->Integral() / den << std::endl;
+  std::cout << "beam-off: " << hmap_trklen_mc["beam-off"]->Integral() << ", " << hmap_trklen_mc["beam-off"]->Integral() / den << std::endl;
+  std::cout << std::endl;
+  std::cout << "PURITY: " << hmap_trklen_mc["signal"]->Integral() / den << std::endl;
+  
+  std::cout << std::endl;
+
+  std::cout << "Number of events per channel (including over/underflow bins):" << std::endl;
+
+  int nbins = hmap_trklen_mc["signal"]->GetNbinsX();
+
+  den = hmap_trklen_mc["signal"]->Integral(0, nbins+1) +
+  hmap_trklen_mc["cosmic"]->Integral(0, nbins+1) +
+  hmap_trklen_mc["outfv"]->Integral(0, nbins+1) +
+  hmap_trklen_mc["nc"]->Integral(0, nbins+1) +
+  hmap_trklen_mc["anumu"]->Integral(0, nbins+1) +
+  hmap_trklen_mc["nue"]->Integral(0, nbins+1) +
+  hmap_trklen_mc["beam-off"]->Integral(0, nbins+1);
+
+  std::cout << "signal: " << hmap_trklen_mc["signal"]->Integral(0, nbins+1) << ", " << hmap_trklen_mc["signal"]->Integral(0, nbins+1) / den << std::endl;
+  std::cout << "cosmic: " << hmap_trklen_mc["cosmic"]->Integral(0, nbins+1) << ", " << hmap_trklen_mc["cosmic"]->Integral(0, nbins+1) / den << std::endl;
+  std::cout << "outfv: " << hmap_trklen_mc["outfv"]->Integral(0, nbins+1) << ", " << hmap_trklen_mc["outfv"]->Integral(0, nbins+1) / den << std::endl;
+  std::cout << "nc: " << hmap_trklen_mc["nc"]->Integral(0, nbins+1) << ", " << hmap_trklen_mc["nc"]->Integral(0, nbins+1) / den << std::endl;
+  std::cout << "anumu: " << hmap_trklen_mc["anumu"]->Integral(0, nbins+1) << ", " << hmap_trklen_mc["anumu"]->Integral(0, nbins+1) / den << std::endl;
+  std::cout << "nue: " << hmap_trklen_mc["nue"]->Integral(0, nbins+1) << ", " << hmap_trklen_mc["nue"]->Integral(0, nbins+1) / den << std::endl;
+  std::cout << "beam-off: " << hmap_trklen_mc["beam-off"]->Integral(0, nbins+1) << ", " << hmap_trklen_mc["beam-off"]->Integral(0, nbins+1) / den << std::endl;
+  std::cout << std::endl;
+  std::cout << "PURITY: " << hmap_trklen_mc["signal"]->Integral(0, nbins+1) / den << std::endl;
+  
   
   name = outdir + "trklen";
   canvas_trklen->SaveAs(name + ".pdf");
   canvas_trklen->SaveAs(name + ".C","C");
 
+/*
   TCanvas* canvas_trkmom = new TCanvas();
   THStack *hs_trkmom_mc = new THStack("hs_trkmom",";Reconstructed Muon Momentum [GeV]; Selected Events");
+  hmap_trkmom_mc["beam-off"] = h_trkmom_total_extbnb;
   leg = DrawTHStack(hs_trkmom_mc, scale_factor_mc_bnbcosmic, true, hmap_trkmom_mc);
-  DrawDataHisto(h_trkmom_data);
-  leg->AddEntry(h_trkmom_data,"Data (Beam-on - Beam-off)","lep");
+  DrawDataHisto(h_trkmom_total_bnbon);
+  leg->AddEntry(hmap_trkmom_mc["beam-off"],"Data (Beam-off)","f");
+  leg->AddEntry(h_trkmom_total_bnbon,"Data (Beam-on)","lep");  //DrawDataHisto(h_trkmom_data);
+  //leg->AddEntry(h_trkmom_data,"Data (Beam-on - Beam-off)","lep");
   DrawPOT(bnbon_pot_meas);
   
   name = outdir + "trkmom";
   canvas_trkmom->SaveAs(name + ".pdf");
   canvas_trkmom->SaveAs(name + ".C","C");
-  
+  */
+  /*
   TCanvas* canvas_trktheta = new TCanvas();
   THStack *hs_trktheta_mc = new THStack("hs_trktheta",";Candidate Track cos(#theta); Selected Events");
+  hmap_trktheta_mc["beam-off"] = h_trktheta_total_extbnb;
   leg = DrawTHStack(hs_trktheta_mc, scale_factor_mc_bnbcosmic, true, hmap_trktheta_mc);
-  DrawDataHisto(h_trktheta_data);
-  leg->AddEntry(h_trktheta_data,"Data (Beam-on - Beam-off)","lep");
+  DrawDataHisto(h_trktheta_total_bnbon);
+  leg->AddEntry(hmap_trktheta_mc["beam-off"],"Data (Beam-off)","f");
+  leg->AddEntry(h_trktheta_total_bnbon,"Data (Beam-on)","lep");  //DrawDataHisto(h_trktheta_data);
+  //leg->AddEntry(h_trktheta_data,"Data (Beam-on - Beam-off)","lep");
   DrawPOT(bnbon_pot_meas);
   
   name = outdir + "trkcostheta";
   canvas_trktheta->SaveAs(name + ".pdf");
   canvas_trktheta->SaveAs(name + ".C","C");
+  */
+
+  TCanvas* canvas_trktheta_trkmom = new TCanvas();
+  THStack *hs_trktheta_trkmom_mc = new THStack("hs_trktheta_trkmom",";cos(#theta_{#mu});p_{#mu} [GeV]");
+  hmap_trktheta_trkmom_mc["beam-off"] = h_trktheta_trkmom_total_extbnb;
+  leg = DrawTHStack2D(hs_trktheta_trkmom_mc, scale_factor_mc_bnbcosmic, true, hmap_trktheta_trkmom_mc);
+  //DrawDataHisto2D(h_trktheta_trkmom_total_bnbon);
+  leg->AddEntry(hmap_trktheta_trkmom_mc["beam-off"],"Data (Beam-off)","f");
+  //leg->AddEntry(h_trktheta_trkmom_total_bnbon,"Data (Beam-on)","lep");  //DrawDataHisto(h_trktheta_data);
+  //leg->AddEntry(h_trktheta_data,"Data (Beam-on - Beam-off)","lep");
+  DrawPOT(bnbon_pot_meas);
+
+  name = outdir + "trkcostheta_trkmom";
+  canvas_trktheta_trkmom->SaveAs(name + ".pdf");
+  canvas_trktheta_trkmom->SaveAs(name + ".C","C");
+
+  TCanvas* canvas_trktheta_trkmom_signal = new TCanvas();
+  hmap_trktheta_trkmom_mc["signal"]->GetXaxis()->SetTitle("cos(#theta_{#mu})");
+  hmap_trktheta_trkmom_mc["signal"]->GetYaxis()->SetTitle("p_{#mu} [GeV]");
+  hmap_trktheta_trkmom_mc["signal"]->GetXaxis()->SetTitleOffset(1.45);
+  hmap_trktheta_trkmom_mc["signal"]->GetYaxis()->SetTitleOffset(1.45);
+  hmap_trktheta_trkmom_mc["signal"]->SetFillColor(kRed);
+  hmap_trktheta_trkmom_mc["signal"]->Draw("lego1");
+  DrawPOT(bnbon_pot_meas);
+  name = outdir + "trkcostheta_trkmom_signal";
+  canvas_trktheta_trkmom_signal->SaveAs(name + ".pdf");
+  canvas_trktheta_trkmom_signal->SaveAs(name + ".C","C");
+
+  TCanvas* canvas_trktheta_trkmom_data = new TCanvas();
+  h_trktheta_trkmom_total_bnbon->GetXaxis()->SetTitle("cos(#theta_{#mu})");
+  h_trktheta_trkmom_total_bnbon->GetYaxis()->SetTitle("p_{#mu} [GeV]");
+  h_trktheta_trkmom_total_bnbon->GetXaxis()->SetTitleOffset(1.45);
+  h_trktheta_trkmom_total_bnbon->GetYaxis()->SetTitleOffset(1.45);
+  h_trktheta_trkmom_total_bnbon->Draw("lego");
+  DrawPOT(bnbon_pot_meas);
+  name = outdir + "trkcostheta_trkmom_data";
+  canvas_trktheta_trkmom_data->SaveAs(name + ".pdf");
+  canvas_trktheta_trkmom_data->SaveAs(name + ".C","C");
+  
+
 
   TCanvas* canvas_trkphi = new TCanvas();
   THStack *hs_trkphi_mc = new THStack("hs_trkphi",";Candidate Track #phi; Selected Events");
+  hmap_trkphi_mc["beam-off"] = h_trkphi_total_extbnb;
   leg = DrawTHStack(hs_trkphi_mc, scale_factor_mc_bnbcosmic, true, hmap_trkphi_mc);
-  DrawDataHisto(h_trkphi_data);
-  leg->AddEntry(h_trkphi_data,"Data (Beam-on - Beam-off)","lep");
+  DrawDataHisto(h_trkphi_total_bnbon);
+  leg->AddEntry(hmap_trkphi_mc["beam-off"],"Data (Beam-off)","f");
+  leg->AddEntry(h_trkphi_total_bnbon,"Data (Beam-on)","lep");  //DrawDataHisto(h_trkphi_data);
+  //leg->AddEntry(h_trkphi_data,"Data (Beam-on - Beam-off)","lep");
   DrawPOT(bnbon_pot_meas);
   
   name = outdir + "trkphi";
@@ -498,12 +701,19 @@ int main(int argc, char* argv[]) {
   canvas_zdiff->SaveAs(name + ".pdf");
   canvas_zdiff->SaveAs(name + ".C","C");
 
+  
+  
+  
+  
   TCanvas* canvas_vtxx = new TCanvas();
   THStack *hs_vtxx_mc = new THStack("hs_vtxx",";Candidate Neutrino Vertex X [cm]; Selected Events");
+  hmap_vtxx_mc["beam-off"] = h_vtxx_total_extbnb;
   leg = DrawTHStack2(hs_vtxx_mc, scale_factor_mc_bnbcosmic, true, hmap_vtxx_mc);
-  DrawDataHisto(h_vtxx_data);
+  leg->AddEntry(hmap_vtxx_mc["beam-off"],"Data (Beam-off)","f");
+  leg->AddEntry(h_vtxx_total_bnbon,"Data (Beam-on)","lep");  // DrawDataHisto(h_vtxx_total_bnbon);
+  DrawDataHisto(h_vtxx_total_bnbon);
   hs_vtxx_mc->SetMaximum(600);
-  leg->AddEntry(h_vtxx_data,"Data (Beam-on - Beam-off)","lep");
+  //leg->AddEntry(h_vtxx_data,"Data (Beam-on - Beam-off)","lep");
   DrawPOT(bnbon_pot_meas);
   
   name = outdir + "vtxx";
@@ -512,10 +722,13 @@ int main(int argc, char* argv[]) {
   
   TCanvas* canvas_vtxy = new TCanvas();
   THStack *hs_vtxy_mc = new THStack("hs_vtxy",";Candidate Neutrino Vertex Y [cm]; Selected Events");
+  hmap_vtxy_mc["beam-off"] = h_vtxy_total_extbnb;
   leg = DrawTHStack2(hs_vtxy_mc, scale_factor_mc_bnbcosmic, true, hmap_vtxy_mc);
+  leg->AddEntry(hmap_vtxy_mc["beam-off"],"Data (Beam-off)","f");
+  leg->AddEntry(h_vtxy_total_bnbon,"Data (Beam-on)","lep");  // DrawDataHisto(h_vtxy_data);
+  DrawDataHisto(h_vtxy_total_bnbon);
   hs_vtxy_mc->SetMaximum(650);
-  DrawDataHisto(h_vtxy_data);
-  leg->AddEntry(h_vtxy_data,"Data (Beam-on - Beam-off)","lep");
+  //leg->AddEntry(h_vtxy_data,"Data (Beam-on - Beam-off)","lep");
   DrawPOT(bnbon_pot_meas);
   
   name = outdir + "vtxy";
@@ -524,11 +737,14 @@ int main(int argc, char* argv[]) {
   
   TCanvas* canvas_vtxz = new TCanvas();
   THStack *hs_vtxz_mc = new THStack("hs_vtxz",";Candidate Neutrino Vertex Z [cm]; Selected Events");
+  hmap_vtxz_mc["beam-off"] = h_vtxz_total_extbnb;
   leg = DrawTHStack2(hs_vtxz_mc, scale_factor_mc_bnbcosmic, true, hmap_vtxz_mc);
   //h_vtxz_data->Draw("E1 same");
-  DrawDataHisto(h_vtxz_data);
+  leg->AddEntry(hmap_vtxz_mc["beam-off"],"Data (Beam-off)","f");
+  leg->AddEntry(h_vtxz_total_bnbon,"Data (Beam-on)","lep");  // DrawDataHisto(h_vtxz_data);
+  DrawDataHisto(h_vtxz_total_bnbon);
   hs_vtxz_mc->SetMaximum(900);
-  leg->AddEntry(h_vtxz_data,"Data (Beam-on - Beam-off)","lep");
+  //leg->AddEntry(h_vtxz_data,"Data (Beam-on - Beam-off)","lep");
   DrawPOT(bnbon_pot_meas);
   
   name = outdir + "vtxz";
